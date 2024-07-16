@@ -377,7 +377,48 @@ git push --set-upstream origin libmyjpeg
 将本地分支和上游分支对应 以后可以直接使用git push
 ```
 
+git合并分支
 
+```sh
+git init
+git add .
+git remote add origin git@github.com:Donkeyzhenbang/WebServer.git
+git commit -m "server initial"
+
+git branch --set-upstream-to=origin/master master
+git pull origin master --allow-unrelated-histories #允许没有相关提交历史两个仓库pull push
+```
+
+![image-20240715194903659](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240715194903659.png)![image-20240715194956378](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240715194956378.png)
+
+![image-20240715201625328](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240715201625328.png)
+
+```sh
+#本地有未保存的更改
+git checkout -- webserver_days/day02/client   
+git pull
+```
+
+1. **贮藏你的本地修改**：
+   如果你暂时不想提交你的修改，但想先更新你的本地仓库以包含远程的最新更改，你可以使用 `git stash` 来贮藏你的修改。这会将你的工作区更改和暂存区的更改保存到一个“贮藏栈”中，然后你可以干净地拉取远程更改。拉取后，你可以使用 `git stash pop` 来恢复你的修改。
+
+   ```bash
+   git stash  
+   git pull  
+   git stash pop
+   ```
+
+   注意，如果贮藏和拉取后的更改在相同文件上发生冲突，你可能需要手动解决这些冲突。
+
+2. **放弃你的本地修改**：
+   如果你认为你的本地修改不重要，或者你只是想确保你的本地仓库与远程仓库同步，你可以简单地放弃这些修改：
+
+   ```bash
+   git checkout -- webserver_days/day02/client  
+   git pull
+   ```
+
+   这个命令会用远程仓库的版本替换你本地文件的内容。
 
 #### thrift
 
