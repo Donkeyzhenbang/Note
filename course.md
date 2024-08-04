@@ -172,7 +172,7 @@
 **路由器在联网时的作用：**
 
 - **数据包转发：** 路由器根据路由表决定如何将数据包从源地址转发到目的地址。
-- **网络连接管理：** 路由器管理内部网络和外部网络的连接，确保数据流量按照预期的路径传输。
+- **网络连接管理：** 路由器管理内部网络和外部网络的连接，确保数据流量按照 预期的路径传输。
 - **访问控制：** 路由器可以配置访问控制列表（ACL），限制或允许特定设备和应用程序的网络访问。
 
 **Ping操作**
@@ -426,7 +426,7 @@ netstat -tulpn | grep 8888
 
 ![image-20240702112105886](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702112105886.png)
 
-### 第二章
+### 第二章 信息的表示和存储
 
 #### 2.1 信息存储
 
@@ -436,14 +436,19 @@ if(a && 5/a) //先判断a是否为0 如果是0，则不再执行后续
 
 ![image-20240704100006629](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240704100006629.png)![image-20240704100206456](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240704100206456.png)
 
-算术右移与逻辑右移不同之处：操作数最高位为1时，左端补1
+算术右移与逻辑右移不同之处：算术右移操作数最高位为1时，左端补1 逻辑右移直接补0
 一般有符号数算术右移 无符号数逻辑右移
 
 ![image-20240704100617873](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240704100617873.png)
 
 #### 2.2 整数的表示
 
-二进制补码 补码是首位是1则为负，首位为0即是正数![image-20240716155215275](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716155215275.png)
+二进制补码 补码是首位是1则为负，首位为0即是正数
+
+- 正数的补码与原码相同。
+- 负数的补码是对原码（符号位除外）按位取反后加1得到的。
+
+![image-20240716155215275](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716155215275.png)
 
 ![image-20240716160847167](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716160847167.png)
 
@@ -457,6 +462,47 @@ if(a && 5/a) //先判断a是否为0 如果是0，则不再执行后续
 
 ![image-20240716161431728](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716161431728.png)
 
-#### 2.3 整数的运算
+#### 2.3 整数的运算-remain
+
+正溢出实际上是一种假溢出，因为没有舍弃位，而是最高位由0变为1，产生了负权重
+负溢出是真正意义的溢出，最高位产生溢出，而被丢弃，使得负权重丢失，让结果变为正数
+
+![image-20240716163831757](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716163831757.png)
+
+![image-20240716165402940](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716165402940.png)
+
+加入偏置后再右移 偏置为（(1<<k )-1）接口得到向0舍入的结果
+
+![image-20240716165824328](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716165824328.png)
+
+![image-20240716170116721](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716170116721.png)
 
 #### 2.4 浮点数
+
+![image-20240716175926183](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716175926183.png)
+
+![image-20240716175215470](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716175215470.png)
+
+阶码（Exponent）
+
+阶码用于表示浮点数中指数部分的值。它决定了尾数的小数点应该向左或向右移动多少位，从而表示出不同的数值范围。在IEEE 754标准中，阶码通常采用偏移（或称为偏置）的方式来表示，这是为了使得所有的指数都有一个正的表示，包括负数。偏移值通常是2*e*−1−1，其中*e*是阶码的位数。
+
+例如，在一个单精度浮点数（32位）中，阶码占据了其中的8位（包括一个符号位），因此偏移值为27−1=127。如果一个单精度浮点数的阶码字段为128（二进制为10000000），那么实际的指数值为128−127=1，表示小数点向右移动1位。
+
+尾数（Mantissa 或 Significand）
+
+尾数（或称为有效数字）是浮点数中表示数值精度（或大小）的部分。它紧跟在阶码之后，包含了浮点数中除去隐含的整数位（在IEEE 754标准中，对于非零的规格化浮点数，尾数前会隐含一个1，这个1不会存储在尾数字段中）之外的所有位。尾数可以是整数也可以是分数，但在计算机中，它们通常以二进制形式存储。
+
+在IEEE 754标准中，尾数部分还包括了一个隐含的二进制点，这意味着尾数实际上是一个二进制小数，而不仅仅是整数或二进制数的集合。这种设计允许浮点数以更高的精度来表示小数。
+
+![image-20240716180332384](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716180332384.png)
+
+![image-20240716180809606](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716180809606.png)   
+
+浮点数结果不具有整数相关性![image-20240716181450431](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716181450431.png)
+
+### 第三章 程序的机器级表示
+
+
+
+# 操作系统

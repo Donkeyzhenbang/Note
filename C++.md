@@ -1,6 +1,10 @@
 # C++
 
-## 字符串
+## C++语法
+
+---
+
+### 字符串
 
 ---
 
@@ -112,198 +116,6 @@ printf("%s\n", myConstPointer); // 输出: Another string
 ```
 
 注意：在C中，字符串字面量（如 `"Hello, World!"`）通常存储在只读内存区域，因此即使你不使用`const`，尝试修改这样的字符串也是未定义行为（通常会导致程序崩溃）。使用`const`是一个好习惯，因为它可以捕获这类潜在的错误。
-
-## STL
-
-### vector容器
-
----
-
-![image-20240523160819949](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240523160819949.png)
-
-```cpp
-vector deque提供iterator迭代器
-std::stack<int, std::vector<int> > third; 
-栈的内部结构，栈的底层实现可以是vector，deque，list 都是可以的， 主要就是数组和链表的底层实现
-栈是以底层容器完成其所有的工作，对外提供统一的接口，底层容器是可插拔的（可以控制使用哪种容器来实现栈的功能）。
-所以STL中栈往往不被归类为容器，而被归类为container adapter（容器适配器）。
-
-栈提供push 和 pop 等等接口，所有元素必须符合先进后出规则，所以栈不提供走访功能，也不提供迭代器(iterator)。 不像是set 或者map 提供迭代器iterator来遍历所有元素。
-队列中先进先出的数据结构，同样不允许有遍历行为，不提供迭代器, SGI STL中队列一样是以deque为缺省情况下的底部结构。std::queue 不提供迭代器。由于 std::queue 是一个队列容器适配器，它被设计成只支持队列的基本操作，如入队（push）、出队（pop）、查看队首元素（front）等，而不支持对队列中的元素进行随机访问或遍历。
-    
-    1. #include <vector>
-vector是变长数组，支持随机访问，不支持在任意位置 O(1)插入。为了保证效率，元素的增删一般应该在末尾进行。
-
-1.1 声明
-#include <vector>   // 头文件
-vector<int> a;      // 相当于一个长度动态变化的int数组
-vector<int> b[233]; // 相当于第一维长233，第二位长度动态变化的int数组
-struct rec{…};
-vector<rec> c;      // 自定义的结构体类型也可以保存在vector中
-1.2 size/empty
-size函数返回vector的实际长度（包含的元素个数），empty函数返回一个bool类型，表明vector是否为空。二者的时间复杂度都是 O(1)所有的STL容器都支持这两个方法，含义也相同，之后我们就不再重复给出。
-
-1.3 clear
-clear函数把vector清空。
-
-1.4 迭代器
-迭代器就像STL容器的“指针”，可以用星号*操作符解除引用。
-
-一个保存int的vector的迭代器声明方法为：
-
-vector<int>::iterator it;
-vector的迭代器是“随机访问迭代器”，可以把vector的迭代器与一个整数相加减，其行为和指针的移动类似。可以把vector的两个迭代器相减，其结果也和指针相减类似，得到两个迭代器对应下标之间的距离。
-
-1.5 begin/end
-begin函数返回指向vector中第一个元素的迭代器。例如a是一个非空的vector，则*a.begin()与a[0]的作用相同。
-
-所有的容器都可以视作一个“前闭后开”的结构，end函数返回vector的尾部，即第n 个元素再往后的“边界”。*a.end()与a[n]都是越界访问，其中n = a.size()。
-
-下面两份代码都遍历了vector<int> a，并输出它的所有元素。
-
-for (int i = 0; i < a.size(); i ++)
-    cout << a[i] << endl;
-
-for (vector<int>::iterator it = a.begin(); it != a.end(); it ++)
-    cout << *it << endl;
-1.6 front/back
-front函数返回vector的第一个元素，等价于*a.begin()和a[0]。
-back函数返回vector的最后一个元素，等价于*--a.end()和a[a.size() – 1]。
-
-1.7 push_back()和pop_back()
-a.push_back(x)把元素x插入到vector a的尾部。
-b.pop_back()删除vector a的最后一个元素。
-    
-vector()                       // 创建一个空vector
-vector(int nSize)              // 创建一个vector, 元素个数为nSize
-vector(int nSize, const t& t)  // 创建一个vector，元素个数为nSize, 且值均为t
-vector(const vector&)          // 复制构造函数
-vector(begin, end)             // 复制[begin, end)区间内另一个数组的元素到vector中
-```
-
-### queue队列
-
-```
-queue主要包括循环队列queue和优先队列priority_queue两个容器
-注意pop操作返回void类型
-循环队列
-push    // 从队尾插入
-pop     // 从队头弹出
-front   // 返回队头元素
-back    // 返回队尾元素
-优先队列
-push    // 把元素插入堆
-pop     // 删除堆顶元素
-top     // 查询堆顶元素（最大值）
-```
-
-### stack栈
-
-```
-push    // 向栈顶插入
-pop     // 弹出栈顶元素
-```
-
-### deque双端队列
-
-双端队列deque是一个支持在两端高效插入或删除元素的连续线性存储空间。它就像是vector和queue的结合。与vector相比，deque在头部增删元素仅需要 O(1)的时间；与queue相比，deque像数组一样支持随机访问。
-
-```
-[]              // 随机访问
-begin/end       // 返回deque的头/尾迭代器
-front/back      // 队头/队尾元素
-push_back       // 从队尾入队
-push_front      // 从队头入队
-pop_back        // 从队尾出队
-pop_front       // 从队头出队
-clear           // 清空队列
-```
-
-### set集合
-
-头文件set主要包括set和multiset两个容器，分别是“有序集合”和“有序多重集合”，即前者的元素不能重复，而后者可以包含若干个相等的元素。set和multiset的内部实现是一棵红黑树，它们支持的函数基本相同。
-
-```cpp
-5.1 声明
-set<int> s;
-struct rec{…}; set<rec> s;  // 结构体rec中必须定义小于号
-multiset<double> s;
-5.2 size/empty/clear
-与vector类似
-
-5.3 迭代器
-set和multiset的迭代器称为“双向访问迭代器”，不支持“随机访问”，支持星号*解除引用，仅支持++和--两个与算术相关的操作。
-
-设it是一个迭代器，例如set<int>::iterator it;
-
-若把it ++，则it会指向“下一个”元素。这里的“下一个”元素是指在元素从小到大排序的结果中，排在it下一名的元素。同理，若把it --，则it将会指向排在“上一个”的元素。
-
-5.4 begin/end
-返回集合的首、尾迭代器，时间复杂度均为 O(1)
-s.begin()是指向集合中最小元素的迭代器。
-s.end()是指向集合中最大元素的下一个位置的迭代器。换言之，就像vector一样，是一个“前闭后开”的形式。因此-- s.end()是指向集合中最大元素的迭代器。
-
-5.5 insert
-s.insert(x)把一个元素x插入到集合s中，时间复杂度为 O(logn)
-在set中，若元素已存在，则不会重复插入该元素，对集合的状态无影响。
-
-5.6 find
-s.find(x)在集合s中查找等于x的元素，并返回指向该元素的迭代器。若不存在，则返回s.end()。时间复杂度为 O(logn)
-
-5.7 lower_bound/upper_bound
-这两个函数的用法与find类似，但查找的条件略有不同，时间复杂度为 O(logn)
-
-s.lower_bound(x)查找大于等于x的元素中最小的一个，并返回指向该元素的迭代器。
-
-s.upper_bound(x)查找大于x的元素中最小的一个，并返回指向该元素的迭代器。
-
-5.8 erase
-设it是一个迭代器，s.erase(it)从s中删除迭代器it指向的元素，时间复杂度为 O(logn)
-
-设x是一个元素，s.erase(x)从s中删除所有等于x的元素，时间复杂度为 O(k+logn)，其中k是被删除的元素个数。
-
-5.9 count
-s.count(x)返回集合s中等于x的元素个数，时间复杂度为 O(k+logn)，其中 k为元素x的个数。
-
-```
-
-
-
-### map
-
-```cpp
-map容器是一个键值对key-value的映射，其内部实现是一棵以key为关键码的红黑树。Map的key和value可以是任意类型，其中key必须定义小于号运算符。
-
-6.1 声明
-map<key_type, value_type> name;
-
-//例如：
-map<long long, bool> vis;
-map<string, int> hash;
-map<pair<int, int>, vector<int>> test;
-6.2 size/empty/clear/begin/end
-均与set类似。
-
-6.3 insert/erase
-与set类似，但其参数均是pair<key_type, value_type>。
-map.insert(pair<int, int>(nums[i], i));
-
-6.4 find
-h.find(x)在变量名为h的map中查找key为x的二元组。
-find返回
-
-6.5 []操作符
-h[key]返回key映射的value的引用，时间复杂度为 O(logn)
-[]操作符是map最吸引人的地方。我们可以很方便地通过h[key]来得到key对应的value，还可以对h[key]进行赋值操作，改变key对应的value。
-
-
-```
-
-![image-20240713205228572](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240713205228572.png)![image-20240713205253828](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240713205253828.png)
-
-## C++语法
-
----
 
 ### 关键字
 
@@ -965,6 +777,196 @@ int main() {
 
 
 
+## STL
+
+### vector容器
+
+---
+
+![image-20240523160819949](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240523160819949.png)
+
+```cpp
+vector deque提供iterator迭代器
+std::stack<int, std::vector<int> > third; 
+栈的内部结构，栈的底层实现可以是vector，deque，list 都是可以的， 主要就是数组和链表的底层实现
+栈是以底层容器完成其所有的工作，对外提供统一的接口，底层容器是可插拔的（可以控制使用哪种容器来实现栈的功能）。
+所以STL中栈往往不被归类为容器，而被归类为container adapter（容器适配器）。
+
+栈提供push 和 pop 等等接口，所有元素必须符合先进后出规则，所以栈不提供走访功能，也不提供迭代器(iterator)。 不像是set 或者map 提供迭代器iterator来遍历所有元素。
+队列中先进先出的数据结构，同样不允许有遍历行为，不提供迭代器, SGI STL中队列一样是以deque为缺省情况下的底部结构。std::queue 不提供迭代器。由于 std::queue 是一个队列容器适配器，它被设计成只支持队列的基本操作，如入队（push）、出队（pop）、查看队首元素（front）等，而不支持对队列中的元素进行随机访问或遍历。
+    
+    1. #include <vector>
+vector是变长数组，支持随机访问，不支持在任意位置 O(1)插入。为了保证效率，元素的增删一般应该在末尾进行。
+
+1.1 声明
+#include <vector>   // 头文件
+vector<int> a;      // 相当于一个长度动态变化的int数组
+vector<int> b[233]; // 相当于第一维长233，第二位长度动态变化的int数组
+struct rec{…};
+vector<rec> c;      // 自定义的结构体类型也可以保存在vector中
+1.2 size/empty
+size函数返回vector的实际长度（包含的元素个数），empty函数返回一个bool类型，表明vector是否为空。二者的时间复杂度都是 O(1)所有的STL容器都支持这两个方法，含义也相同，之后我们就不再重复给出。
+
+1.3 clear
+clear函数把vector清空。
+
+1.4 迭代器
+迭代器就像STL容器的“指针”，可以用星号*操作符解除引用。
+
+一个保存int的vector的迭代器声明方法为：
+
+vector<int>::iterator it;
+vector的迭代器是“随机访问迭代器”，可以把vector的迭代器与一个整数相加减，其行为和指针的移动类似。可以把vector的两个迭代器相减，其结果也和指针相减类似，得到两个迭代器对应下标之间的距离。
+
+1.5 begin/end
+begin函数返回指向vector中第一个元素的迭代器。例如a是一个非空的vector，则*a.begin()与a[0]的作用相同。
+
+所有的容器都可以视作一个“前闭后开”的结构，end函数返回vector的尾部，即第n 个元素再往后的“边界”。*a.end()与a[n]都是越界访问，其中n = a.size()。
+
+下面两份代码都遍历了vector<int> a，并输出它的所有元素。
+
+for (int i = 0; i < a.size(); i ++)
+    cout << a[i] << endl;
+
+for (vector<int>::iterator it = a.begin(); it != a.end(); it ++)
+    cout << *it << endl;
+1.6 front/back
+front函数返回vector的第一个元素，等价于*a.begin()和a[0]。
+back函数返回vector的最后一个元素，等价于*--a.end()和a[a.size() – 1]。
+
+1.7 push_back()和pop_back()
+a.push_back(x)把元素x插入到vector a的尾部。
+b.pop_back()删除vector a的最后一个元素。
+    
+vector()                       // 创建一个空vector
+vector(int nSize)              // 创建一个vector, 元素个数为nSize
+vector(int nSize, const t& t)  // 创建一个vector，元素个数为nSize, 且值均为t
+vector(const vector&)          // 复制构造函数
+vector(begin, end)             // 复制[begin, end)区间内另一个数组的元素到vector中
+```
+
+### queue队列
+
+```
+queue主要包括循环队列queue和优先队列priority_queue两个容器
+注意pop操作返回void类型
+循环队列
+push    // 从队尾插入
+pop     // 从队头弹出
+front   // 返回队头元素
+back    // 返回队尾元素
+优先队列
+push    // 把元素插入堆
+pop     // 删除堆顶元素
+top     // 查询堆顶元素（最大值）
+```
+
+### stack栈
+
+```
+push    // 向栈顶插入
+pop     // 弹出栈顶元素
+```
+
+### deque双端队列
+
+双端队列deque是一个支持在两端高效插入或删除元素的连续线性存储空间。它就像是vector和queue的结合。与vector相比，deque在头部增删元素仅需要 O(1)的时间；与queue相比，deque像数组一样支持随机访问。
+
+```
+[]              // 随机访问
+begin/end       // 返回deque的头/尾迭代器
+front/back      // 队头/队尾元素
+push_back       // 从队尾入队
+push_front      // 从队头入队
+pop_back        // 从队尾出队
+pop_front       // 从队头出队
+clear           // 清空队列
+```
+
+### set集合
+
+头文件set主要包括set和multiset两个容器，分别是“有序集合”和“有序多重集合”，即前者的元素不能重复，而后者可以包含若干个相等的元素。set和multiset的内部实现是一棵红黑树，它们支持的函数基本相同。
+
+```cpp
+5.1 声明
+set<int> s;
+struct rec{…}; set<rec> s;  // 结构体rec中必须定义小于号
+multiset<double> s;
+5.2 size/empty/clear
+与vector类似
+
+5.3 迭代器
+set和multiset的迭代器称为“双向访问迭代器”，不支持“随机访问”，支持星号*解除引用，仅支持++和--两个与算术相关的操作。
+
+设it是一个迭代器，例如set<int>::iterator it;
+
+若把it ++，则it会指向“下一个”元素。这里的“下一个”元素是指在元素从小到大排序的结果中，排在it下一名的元素。同理，若把it --，则it将会指向排在“上一个”的元素。
+
+5.4 begin/end
+返回集合的首、尾迭代器，时间复杂度均为 O(1)
+s.begin()是指向集合中最小元素的迭代器。
+s.end()是指向集合中最大元素的下一个位置的迭代器。换言之，就像vector一样，是一个“前闭后开”的形式。因此-- s.end()是指向集合中最大元素的迭代器。
+
+5.5 insert
+s.insert(x)把一个元素x插入到集合s中，时间复杂度为 O(logn)
+在set中，若元素已存在，则不会重复插入该元素，对集合的状态无影响。
+
+5.6 find
+s.find(x)在集合s中查找等于x的元素，并返回指向该元素的迭代器。若不存在，则返回s.end()。时间复杂度为 O(logn)
+
+5.7 lower_bound/upper_bound
+这两个函数的用法与find类似，但查找的条件略有不同，时间复杂度为 O(logn)
+
+s.lower_bound(x)查找大于等于x的元素中最小的一个，并返回指向该元素的迭代器。
+
+s.upper_bound(x)查找大于x的元素中最小的一个，并返回指向该元素的迭代器。
+
+5.8 erase
+设it是一个迭代器，s.erase(it)从s中删除迭代器it指向的元素，时间复杂度为 O(logn)
+
+设x是一个元素，s.erase(x)从s中删除所有等于x的元素，时间复杂度为 O(k+logn)，其中k是被删除的元素个数。
+
+5.9 count
+s.count(x)返回集合s中等于x的元素个数，时间复杂度为 O(k+logn)，其中 k为元素x的个数。
+
+```
+
+
+
+### map
+
+```cpp
+map容器是一个键值对key-value的映射，其内部实现是一棵以key为关键码的红黑树。Map的key和value可以是任意类型，其中key必须定义小于号运算符。
+
+6.1 声明
+map<key_type, value_type> name;
+
+//例如：
+map<long long, bool> vis;
+map<string, int> hash;
+map<pair<int, int>, vector<int>> test;
+6.2 size/empty/clear/begin/end
+均与set类似。
+
+6.3 insert/erase
+与set类似，但其参数均是pair<key_type, value_type>。
+map.insert(pair<int, int>(nums[i], i));
+
+6.4 find
+h.find(x)在变量名为h的map中查找key为x的二元组。
+find返回
+
+6.5 []操作符
+h[key]返回key映射的value的引用，时间复杂度为 O(logn)
+[]操作符是map最吸引人的地方。我们可以很方便地通过h[key]来得到key对应的value，还可以对h[key]进行赋值操作，改变key对应的value。
+
+
+```
+
+![image-20240713205228572](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240713205228572.png)![image-20240713205253828](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240713205253828.png)
+
+
+
 ## 算法
 
 ### 数据结构
@@ -1231,9 +1233,13 @@ public:
 
 
 
-## 编译
+## 杂谈
 
-### Makefile
+### 编译
+
+---
+
+#### Makefile
 
 
 在 Makefile 中，这些变量和标志用于编译和链接程序。以下是这些变量和标志的解释：
@@ -1258,8 +1264,6 @@ public:
 
 ![image-20240620192551697](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240620192551697.png)
 
-
-
 ![image-20240620192707613](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240620192707613.png)
 ![image-20240620192636949](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240620192636949.png)
 
@@ -1281,7 +1285,7 @@ public:
 
 所以，当你在 `src/configs/pics_config.cpp` 中写 `#include "pics_config.h"` 时，编译器会从你指定的所有包含目录中搜索这个头文件。只要 `pics_config.h` 位于这些目录之一中，编译器就能找到它。
 
-### 编译流程
+#### 编译流程
 
 ```
 指定文件夹下解压
@@ -1338,7 +1342,13 @@ gcc -o main *.o
 g++ *.o -o main # -o 后面接生成文件outputfile
 ```
 
-## Cherno C++
+
+
+### 设计模式
+
+
+
+### Cherno C++
 
 指针---`static_cast dynamic_cast delete[]`
 
@@ -1512,11 +1522,9 @@ public：可见
 
 总结来说，类中的数组大小需要“静态”定义（在某种意义上），但这并不意味着它必须是静态成员变量。实际上，它通常是通过常量表达式或模板参数在编译时确定的。
 
-## Google Cpp Style
+### C++ Primer Plus
 
-## C++ Primer Plus
 
-#### 
 
 # 项目
 
@@ -1542,8 +1550,6 @@ QT报错 没有threadmanager.h文件
 ---
 
 ### JPEG压缩
-
-项目地址[Donkeyzhenbang/jpeg_compress (github.com)](https://github.com/Donkeyzhenbang/jpeg_compress)
 
 ##### turbojpeg压缩
 
@@ -1746,7 +1752,49 @@ void insert_into_db(sqlite3* db, const std::string& filename, int original_size,
 
 ### 服务器传图
 
+#### 程序打包
+
 定义编译宏 make -j8 TYPE=LIB即为编译生成动态库  ![image-20240708134813558](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240708134813558.png)
+
+#### 调试
+
+##### valgrind
+
+**使用内存检查工具**：如 Valgrind，来检测内存泄漏和缓冲区溢出问题。
+
+```sh
+valgrind --track-origins=yes --leak-check=full ./your_executable
+```
+
+对于本次服务器传图中调用`strcpy`函数导致内存泄漏的问题，valgrind可以直接定位到
+
+##### gdb
+
+gdb调试qt控制台程序在.pro文件中添加调试信息,这样可执行文件能够找到相应源文件与一些调试信息。
+
+```sh
+# 为C编译器添加-g选项
+QMAKE_CFLAGS += -g
+
+# 为C++编译器添加-g选项
+QMAKE_CXXFLAGS += -g 
+```
+
+或者添加
+
+```sh
+CONFIG += debug
+```
+
+gdb调试相关操作
+
+```sh
+bt 		#backtrace
+run 	#重新运行程序
+step	#单步
+next	#不进入函数内部
+break heartbeat.cpp:40 		#break 打断点在具体某个源文件行号打断点，需要编译时添加调试信息
+```
 
 
 
@@ -1897,6 +1945,8 @@ sudo service apport stop
 gdb -c core 查看错误报告 输入bt查看错误报告
 ```
 
+
+
 #### Clion远程调试
 
 #### Makefile
@@ -1952,8 +2002,6 @@ valgrind \
 
 
 
-
-
 ## Webserver
 
 #### Cpolar
@@ -1964,8 +2012,6 @@ valgrind \
 ```sh
 cpolar 1316 #将本地运行1316端口公开至公网
 ```
-
-
 
 #### Linux编程入门
 
@@ -1996,6 +2042,3 @@ sudo vim /etc/ld.so.conf
 
 ![image-20240621235034068](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240621235034068.png)
 
-
-
-## Google Test
