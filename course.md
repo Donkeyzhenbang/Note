@@ -325,44 +325,6 @@
 
 ### 第六章 应用层
 
-## socket编程
-
----
-
-### socket_function
-
----
-
-![image-20240615140328979](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240615140328979.png)
-
-
-
-### socket_problem
-
-```shell
-lsof -i:8888 #查看8888端口是否被使用
-netstat -tnlp #查看服务器进程使用哪些端口
-
-在agx上实验可以运行 最终发现是防火墙
-https://blog.csdn.net/HHHSSD/article/details/117410122
-
-首先将需要连接的端口加到安全组中 例如8888
-！！！注意这里查看打开端口号才是正确的 
-加完成后将该端口拉入防火墙
-1.开启防火墙
-systemctl start firewalld
-2设置打开的端口号（永久打开）
-firewall-cmd --add-port=8000/tcp --permanent
-3.更新，端口的设置
-firewall-cmd --reload
-4.查看已经打开的端口
-firewall-cmd --list-all
-
-使用 netstat -tulpn 查看 端口使用情况
-# 以8888端口为例
-netstat -tulpn | grep 8888
-```
-
 
 
 # 数据库
@@ -395,114 +357,200 @@ netstat -tulpn | grep 8888
 
 # 计算机组成原理
 
-## CSAPP
-
-### 第一章
-
-程序运行流程：
-首先我们按下./hello ，字符串从键盘被读取 shell会将读取到的字符串逐一加载到寄存器，处理器会把hello字符串放到内存中。（注意此处不可以DMA直接读取到内存，内存只是存储空间，不放在寄存器里面program count无法指向程序）按下回车键，指令结束，shell会通过一系列指令加载可执行文件hello。这些指令会将hello中的数据和指令从磁盘督导内存而不经过CPU，这既是DMA技术。当hello中的数据和指令到达内存时，处理器就开始执行指令。CPU会将hello world\n 这个字符串复制到寄存器文件，然后再从寄存器文件复制到显示设备。
-
-![image-20240701095309869](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240701095309869.png)
-
-![image-20240701095600280](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240701095600280.png)
-
-![image-20240702105444786](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702105444786.png)
-
-![image-20240702111734630](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702111734630.png)
-
-![image-20240702105905118](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702105905118.png)
-
-![image-20240702110710375](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702110710375.png)
-
-![image-20240702111326538](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702111326538.png)
-
-![image-20240702111503634](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702111503634.png)
-
-![image-20240702111802383](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702111802383.png)
-
-![image-20240702111905488](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702111905488.png)
-
-![image-20240702112016418](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702112016418.png)
-
-![image-20240702112105886](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240702112105886.png)
-
-### 第二章 信息的表示和存储
-
-#### 2.1 信息存储
-
-gcc -m32 -o hello32 hello.c #编译32位程序
-gcc -m64 -o hello64 hello.c #编译64位程序
-if(a && 5/a) //先判断a是否为0 如果是0，则不再执行后续
-
-![image-20240704100006629](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240704100006629.png)![image-20240704100206456](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240704100206456.png)
-
-算术右移与逻辑右移不同之处：算术右移操作数最高位为1时，左端补1 逻辑右移直接补0
-一般有符号数算术右移 无符号数逻辑右移
-
-![image-20240704100617873](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240704100617873.png)
-
-#### 2.2 整数的表示
-
-二进制补码 补码是首位是1则为负，首位为0即是正数
-
-- 正数的补码与原码相同。
-- 负数的补码是对原码（符号位除外）按位取反后加1得到的。
-
-![image-20240716155215275](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716155215275.png)
-
-![image-20240716160847167](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716160847167.png)
-
-![image-20240716161547701](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716161547701.png)
-
-![image-20240716161033328](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716161623476.png)
-
-![image-20240716161706090](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716161706090.png)
-
-![image-20240716161738855](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716161738855.png)
-
-![image-20240716161431728](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716161431728.png)
-
-#### 2.3 整数的运算-remain
-
-正溢出实际上是一种假溢出，因为没有舍弃位，而是最高位由0变为1，产生了负权重
-负溢出是真正意义的溢出，最高位产生溢出，而被丢弃，使得负权重丢失，让结果变为正数
-
-![image-20240716163831757](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716163831757.png)
-
-![image-20240716165402940](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716165402940.png)
-
-加入偏置后再右移 偏置为（(1<<k )-1）接口得到向0舍入的结果
-
-![image-20240716165824328](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716165824328.png)
-
-![image-20240716170116721](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716170116721.png)
-
-#### 2.4 浮点数
-
-![image-20240716175926183](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716175926183.png)
-
-![image-20240716175215470](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716175215470.png)
-
-阶码（Exponent）
-
-阶码用于表示浮点数中指数部分的值。它决定了尾数的小数点应该向左或向右移动多少位，从而表示出不同的数值范围。在IEEE 754标准中，阶码通常采用偏移（或称为偏置）的方式来表示，这是为了使得所有的指数都有一个正的表示，包括负数。偏移值通常是2*e*−1−1，其中*e*是阶码的位数。
-
-例如，在一个单精度浮点数（32位）中，阶码占据了其中的8位（包括一个符号位），因此偏移值为27−1=127。如果一个单精度浮点数的阶码字段为128（二进制为10000000），那么实际的指数值为128−127=1，表示小数点向右移动1位。
-
-尾数（Mantissa 或 Significand）
-
-尾数（或称为有效数字）是浮点数中表示数值精度（或大小）的部分。它紧跟在阶码之后，包含了浮点数中除去隐含的整数位（在IEEE 754标准中，对于非零的规格化浮点数，尾数前会隐含一个1，这个1不会存储在尾数字段中）之外的所有位。尾数可以是整数也可以是分数，但在计算机中，它们通常以二进制形式存储。
-
-在IEEE 754标准中，尾数部分还包括了一个隐含的二进制点，这意味着尾数实际上是一个二进制小数，而不仅仅是整数或二进制数的集合。这种设计允许浮点数以更高的精度来表示小数。
-
-![image-20240716180332384](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716180332384.png)
-
-![image-20240716180809606](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716180809606.png)   
-
-浮点数结果不具有整数相关性![image-20240716181450431](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240716181450431.png)
-
-### 第三章 程序的机器级表示
 
 
 
-# 操作系统
+
+# 操作系统 
+
+## 口袋操作系统
+
+### 简介
+
+操作系统位于应用程序和底层硬件之间，向上，为应用程序提供了虚拟化的底层资源，使得应用程序可以不考虑计算机在硬件层面的复杂性，有时也称操作系统为虚拟机；向下，操作系统又提供了针对硬件层面的资源管理，有时也被称为资源管理器
+
+标准库和应用程序并不是以函数调用的方式使用系统调用，操作系统提供的系统调用，会被统一注册在相应的系统调用表这个内核结构中，上层代码在使用时，则需要以便宜位置的方式指定表中的某个单元格
+
+![image-20240913161323270](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240913161323270.png)
+
+
+
+**CPU虚拟化**： 每一个进程都是由独立的CPU进行处理的，任何一个进程的运行状态不会影响到其他进程
+
+![image-20240913161902641](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240913161902641.png)
+
+&符号可以将标记的进程置于后台运行
+
+![image-20240913161726088](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240913161726088.png)
+
+**内存虚拟化**：每个进程享有完全独立的内存资源。实际在操作系统内部，每个进程所享有的并不是全部的内存资源，而是自己独立的虚拟地址空间
+
+![image-20240913162041757](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240913162041757.png)
+
+**持久化** 
+
+![image-20240913163622841](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240913163622841.png)
+
+**并发** 应用程序层面最直接的体现时多线程，可以将进程中的任务进行更细致的划分，更好的利用多核CPU带来的任务并行性
+
+![image-20240913163833324](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240913163833324.png)
+
+操作系统的要求
+
+![image-20240913164231510](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240913164231510.png)
+
+![image-20240913164410265](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240913164410265.png)
+
+
+
+### 进程
+
+**进程的主要执行资源分为三部分：寄存器数据，内存数据，IO设置**
+
+调度策略与上下文切换
+
+![image-20240917105310922](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917105310922.png)
+
+上上下文切换：软件切换与硬件切换
+
+![image-20240917105711344](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917105711344.png)
+
+调度策略
+
+![image-20240917105809245](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917105809245.png)
+
+  虚拟地址空间：外面再调试C++打印的内存地址都是虚拟内存空间中的虚拟地址，而不是武理内存地址，这种针对进程的独立虚拟内存空间便是操作系统内存虚拟化的核心
+
+![image-20240917110741484](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917110741484.png)
+
+ 虚拟内存空间程序解析，栈通常是由高地址向低地址生长，所谓的栈顶实际上是栈空间再低地址方向的结束位置
+
+![image-20240917110851311](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917110851311.png)
+
+ ![image-20240917111136949](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917111136949.png)
+
+IO设置
+
+![image-20240917111310265](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917111310265.png)
+
+状态转移模型：在进程调度的整个生命周期中，进程可能会处于不同的状态，可以被最简划分为三中国：就绪/运行/阻塞，首先进程可能处于就绪状态，处于该状态的进程还没有被分配CPU时间片，因此还没有被执行，随着进程被调度，它被赋予相应的CPU时间片并开始运行，此时进程处于运行状态， 但在某一刻，进程执行了一些同步IO操作，比如读取文件，同步意味着读取文件在这个IO操作完成之前，进程的其他代码都无法被执行，未来更好的利用CPU，操作系统通常会将这类进程暂时设置为阻塞状态，处于阻塞状态的进程无法被直接执行，就直到某一刻，进程执行的同步IO操作结束了，操作系统再次将进程设置为就绪状态，并在合适的时间为其分配CPU时间片，当然处于运行状态的进程不会被一直运行，当手上的CPU时间片被使用完毕之后，他又会被置为就绪状态，等待操作系统的下一次调度
+
+![image-20240917111534506](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917111534506.png)
+
+xv6操作系统 进程的内部结构
+
+![image-20240917111705547](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917111705547.png)
+
+### 进程接口
+
+类Unix系统中进程控制的经典模型
+
+ ```c
+ pid_t fork(void); //创建新进程 fork函数创建当前进程的拷贝作为子进程，子进程与父进程拥有一样的执行资源，拥有完全相同代码的Text端，并且正在同一位置执行，因此fork函数执行完毕之后，父子进程会一同从该函数返回
+ pid_t wait(int* stat_loc);//等待子进程退出
+ int execvp(const char *file, cha *const argv[]);
+ //替换当前进程镜像。即进程的一系列执行资源包括寄存器资源，内存资源以及IO配置信息，会将当前进程的状态转换为可执行文件对应进程的状态
+ ```
+
+`execvp`可用于我们实现一些特殊点功能，比如输出重定向、管道
+
+```c
+int execvp(const char *file, char *const argv[]);
+```
+
+**参数**
+
+- **file**：要执行的程序的名称。
+- **argv[]**：参数列表，必须是以 `NULL` 结尾的指针数组。这使得 `execvp` 能够知道哪些参数传递给了新程序。
+
+**功能**
+
+`execvp` 会替换当前进程的映像，用新的程序来替换它。这意味着当前进程的代码、数据和堆栈都会被新程序的相应部分替换。**`execvp` 会搜索环境变量 `PATH` 指定的目录，以找到名为 `file` 的可执行文件。**
+
+**使用场景**
+
+`execvp` 常用在脚本或程序中需要调用外部程序时。例如，你可能想从你的 C 程序中调用文本编辑器或图像处理工具。
+
+![image-20240917145752135](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917145752135.png)
+
+简易版shell
+
+![image-20240917150118079](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917150118079.png)
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+int main(int argc, const char* argv[]) {
+  printf("Welcome to my shell!\n");
+  while (1) {
+    printf("# ");
+    char *line = NULL;
+    size_t size;
+    size_t line_len = getline(&line, &size, stdin);
+    if (line_len > 1) {
+      // Remove line break character.
+      *(line + line_len - 1) = '\0';  
+      char* args[2];
+      args[0] = line;
+      args[1] = NULL;
+      // Run command in a separate process.
+      int ret_val = fork();
+      if (ret_val < 0) {
+        fprintf(stderr, "Fork failed!\n");
+      } else if (ret_val == 0) {
+        // Child process goes this way.
+        int ret_code = execvp(args[0], args);
+        if (ret_code == -1) {
+          printf("Execution failed: %s.\n", strerror(errno));
+        }
+      } else {
+        // Parent process goes this way.
+        int wstatus;
+        int terminated_pid = wait(&wstatus);
+        if (terminated_pid == -1) {
+          fprintf(stderr, "Wait failed!\n");
+        }
+        free(line);
+      }
+    }
+  }
+  return 0;
+}
+```
+
+### 有限直接执行LDE模型
+
+操作系统的CPU虚拟化，主要是通过分时控制的机制来实现的，分是看着主要通过两部分实现，调度策略（控制进程何时被切换）和上下文切换机制（暂停当前进程，并允运行另一个进程）
+
+![image-20240917163130857](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917163130857.png)
+
+ 用户态/内核台切换 系统调用
+
+![image-20240917163921989](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917163921989.png)
+
+内核栈 用于完整表示原有进程的运行状态的寄存器的值，为了将执行流转移至用户进程，操作系统会在内核栈中安特定布局存放用于恢复进程的所有数据内容。恢复时将从内核栈拷贝至CPU物理寄存器
+
+`Trap Tbale` `System Call`
+
+![image-20240917164516686](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917164516686.png)
+
+![image-20240917164727831](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917164727831.png)
+
+![image-20240917165132853](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917165132853.png)
+
+![image-20240917165307545](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917165307545.png)
+
+非协作式进程切换 trap实际上就是一种由软件触发的中断 
+
+每个进程在其基础南横控制块PCB中，通常存放两部分信息，第一部分为当操作系统调度该进程时，需要使用的内核栈地址，这**个地址指向的内存中存放着由内核想要运行这个进程时需要恢复的寄存器的值**，这些值将在操作系统以及return-from-trap指令的控制下，从内核栈拷贝至CPU的物理寄存器，第二部分为与该进程相关的上下文寄存器的值，不同于内核栈中保存的寄存器中的值，**上下文寄存器是指内核代码在调度进程时所需要的相关寄存器的值**，这些寄存器的值直接影响目标进程能否被顺利调度，当进程被顺利调度之后，内核栈中的寄存器中的值则可用于恢复进程的运行状态
+
+![image-20240917170208675](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917170208675.png)
+
+![image-20240917170311873](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917170311873.png)
+
+![image-20240917170410433](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917170410433.png)
+

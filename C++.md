@@ -1,3 +1,128 @@
+
+
+# Linux C
+
+
+
+### 八股
+
+#### 原子操作
+
+原子操作（Atomic Operation）是指在多线程环境中，当多个线程同时访问同一个资源（如内存位置）时，每个操作都是不可分割的，要么完全执行，要么完全不执行，不存在中间状态。这意味着原子操作在执行过程中不会被其他线程中断。
+
+原子操作的主要目的是确保数据的一致性和线程之间的同步，避免出现竞态条件（Race Condition）和数据竞争（Data Race）。
+
+**常见的原子操作包括：**
+
+1. **原子读写**：原子地读取或写入一个变量的值，没有其他线程可以同时修改这个变量。
+2. **原子比较并交换（Compare-and-Swap, CAS）**：这是一个常用的原子操作，它比较一个变量的当前值与预期值，如果相等，则将变量更新为新值。
+3. **原子增加或减少（Increment/Decrement）**：原子地增加或减少变量的值。
+4. **原子加载和存储（Load and Store）**：原子地从内存加载值或将值存储到内存。
+
+**原子操作在编程中的应用：**
+
+- **同步机制**：原子操作常用于实现锁和其他同步机制，如互斥锁（Mutexes）、信号量（Semaphores）和条件变量（Condition Variables）。
+- **无锁编程**：原子操作是实现无锁数据结构（如无锁队列、无锁哈希表）的基础，这些数据结构可以在没有传统锁的情况下安全地在多线程环境中使用。
+- **多线程计数器**：在多线程程序中，使用原子操作来递增或递减计数器可以确保计数的准确性。
+
+#### epoll惊群
+
+##### **惊群效应发生原因**
+
+1. **多个进程监听同一个 socket**：在传统的 socket 监听中，如果有多个进程或线程绑定到同一个端口上监听，当端口上发生事件（如新的连接请求）时，内核会唤醒所有监听该端口的进程或线程。
+2. **不必要的唤醒**：由于只有一个连接请求，唤醒的多个进程或线程中只有一个能处理该请求，其他进程或线程将无事可做，这导致了大量的资源浪费和 CPU 空转。
+
+**`SO_REUSEPORT` 选项的作用：**
+
+1. **独立的 socket 实例**：当使用 `SO_REUSEPORT` 选项创建监听 socket 时，每个 socket 实例在 socket 层都是独立的。即使多个 socket 监听相同的 IP 地址和端口，它们也是相互隔离的。
+2. **事件分发**：内核或 TCP/IP 协议栈负责将到来的事件（如新的连接请求）均匀地分发到这些独立的 socket 实例上。这样，每个事件只唤醒一个进程或线程，而不是所有监听相同端口的进程。
+3. **避免惊群**：由于事件是独立分发的，每个连接请求只唤醒一个进程或线程来处理，避免了不必要的唤醒，从而解决了惊群问题。
+
+**优点：**
+
+- **性能提升**：减少了不必要的进程唤醒，从而降低了 CPU 空转，提高了系统的整体性能。
+- **资源利用率提高**：通过更有效地处理事件，系统可以更高效地利用资源。
+
+**使用场景：**
+
+- **高负载服务器**：在处理大量并发连接的服务器上，使用 `SO_REUSEPORT` 可以显著提高性能。
+- **多核处理器**：在多核处理器系统中，`SO_REUSEPORT` 可以使得每个核上运行的进程或线程都能独立地处理事件，从而提高并行处理能力。
+
+**注意事项：**
+
+- **适用性**：`SO_REUSEPORT` 主要用于解决高并发场景下的惊群问题，对于低负载系统，传统的监听方式可能已足够。
+- **实现差异**：不同的操作系统和网络库对 `SO_REUSEPORT` 的支持和实现可能有所不同，使用时需要考虑兼容性和特定环境下的行为。
+
+#####  SO_REUSEPORT
+
+**场景设定**
+
+假设我们有一个高性能的网络服务器，它需要处理大量的并发连接。我们有4个核心的CPU，我们希望充分利用每个核心来处理网络请求。
+
+**服务器端设置**
+
+1. **创建多个监听 socket**：我们创建4个 socket，每个 socket 都绑定到服务器的 `80` 端口（HTTP 标准端口），并设置 `SO_REUSEPORT` 选项。
+2. **绑定和监听**：
+   - 每个 socket 绑定到 IP 地址 `192.168.1.100` 和端口 `80` 上。
+   - 每个 socket 调用 `listen()` 函数开始监听。
+3. **分发连接**：
+   - 当客户端尝试连接到服务器的 `80` 端口时，操作系统内核将决定哪个 socket 接受这个连接。
+   - 内核根据内部算法（可能是轮询或其他更复杂的负载均衡算法）将连接请求分发到其中一个 socket 上。
+4. **处理连接**：
+   - 每个 socket 独立地接受连接并处理它。例如，socket 1 可能处理来自客户端 A 的连接，socket 2 处理来自客户端 B 的连接，依此类推。
+   - 每个 socket 处理的连接和数据是相互隔离的，即 socket 1 不会看到 socket 2 处理的数据。
+
+客户端操作
+
+- **发起连接**：客户端尝试连接到服务器的 IP 地址 `192.168.1.100` 和端口 `80`。
+- **连接接受**：内核决定哪个 socket 接受这个连接，并为该连接创建一个新的 socket 描述符，然后返回给客户端。
+
+#### volatile
+
+写回策略
+
+![image-20240917204128678](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240917204128678.png)
+
+若存在缓存，即CPU先访问缓存， 
+1.当请求是读请求时，若命中，直接返回其数据；当未命中时，先再缓存中分配一个缓存快，判断当前缓存块是不是脏数据（被修改过的数据），如果是，将之前的数据写回下一级存储中，如果不是脏数据，直接从下一级存储中读到cache块中，修改dirty位为，clean（未被修改）；返回数据。
+
+2.当请求是写请求时，若命中，直接将新数据写入缓存，并且标记dirt位为，dirty（被修改）；若未命中，分配一块缓存块，，判断当前缓存块是不是脏数据，如果是，将之前的数据写回下一级存储中，如果不是脏数据，直接从下一级存储中读到cache块中，将新数据写入缓存块，并标记为dirty。
+
+1. **内存可见性**：在多线程环境中，`volatile` 确保一个线程对变量的修改对其他线程立即可见。
+
+2. **防止编译器优化**：`volatile` 告诉编译器不要对这个变量进行优化，因为它的值可能在任何时候改变。编译器通常对普通变量进行优化，可能会缓存它的值或者重新排序指令。
+
+3. **硬件交互**：在嵌入式编程中，`volatile` 常用于修饰与硬件设备（如外设寄存器）相关的变量，以确保每次访问都直接从硬件地址读取或写入，而不是使用缓存的值。
+
+4. **中断服务例程**：在中断服务例程（ISR）中，使用 `volatile` 修饰的变量可以确保在主程序和中断处理程序之间正确同步。
+
+5. 示例
+
+   ```c
+   volatile int flag = 0;
+   
+   void interrupt_handler() {
+       flag = 1; // 中断处理程序可能会设置这个标志
+   }
+   
+   void main() {
+       // ... 其他代码 ...
+   
+       // 检查标志是否被中断处理程序设置
+       while (flag == 0) {
+           // 等待中断事件发生
+       }
+   
+       // 执行中断后的清理工作
+   }
+   ```
+
+   ### 注意事项
+
+   - `volatile` 并不能替代同步机制，如互斥锁（mutexes）或信号量（semaphores），在多线程环境中，它不提供任何线程安全保证。
+   - 过度使用 `volatile` 可能会导致程序性能下降，因为它阻止了编译器进行某些优化。
+   - 在 C++11 及更高版本中，推荐使用原子类型（`std::atomic`）来处理多线程中的内存可见性和同步问题。
+
 # C++
 
 ## C++语法
@@ -118,6 +243,8 @@ printf("%s\n", myConstPointer); // 输出: Another string
 注意：在C中，字符串字面量（如 `"Hello, World!"`）通常存储在只读内存区域，因此即使你不使用`const`，尝试修改这样的字符串也是未定义行为（通常会导致程序崩溃）。使用`const`是一个好习惯，因为它可以捕获这类潜在的错误。
 
 ### 关键字
+
+
 
 #### new
 
@@ -381,11 +508,219 @@ int main() {
 在上面的示例中，create_player 函数没有 & 符号，因此参数 v 是一个向量对象的副本。在函数内部对 v 进行的任何修改都不会影响到原始对象 players1。而 create_player_with_ref 函数有 & 符号，参数 v 是原始向量对象的引用，因此在函数内部对 v 进行的修改会影响到原始对象 players2。
 ```
 
+#### 函数指针
 
+在C或C++编程语言中，`typedef` 关键字用于为类型创建一个新的别名。在你提供的代码片段中，`typedef` 用于定义一个名为 `draw_function` 的新类型，这是一个函数指针类型：
+
+```cpp
+typedef void (*draw_function)(int x, int y, char ch);
+```
+
+下面是对这个类型定义的详细解释：
+
+- `void`：这个函数指针指向的函数返回类型是 `void`，意味着函数不返回任何值。
+- `(*draw_function)`：定义了一个名为 `draw_function` 的新类型，它是一个指针，指向一个函数。
+- `(int x, int y, char ch)`：这是 `draw_function` 指向的函数的参数列表。该函数接受三个参数：
+  - `int x`：第一个参数 `x`，类型为 `int`。
+  - `int y`：第二个参数 `y`，类型为 `int`。
+  - `char ch`：第三个参数 `ch`，类型为 `char`。
+
+```cpp
+typedef void (*draw_function)(int x, int y, char ch);
+
+static void
+toybox_run(int fps,
+    void (*update)(int, int, draw_function draw),
+    void (*keypress)(int));
+
+
+static void
+toybox_run(int fps,
+    void (*update)(int, int, draw_function),
+    void (*keypress)(int)) {
+    uint64_t last_time = 0;
+    int i, last_size = -1;
+    char buffer[MAX_W_ * MAX_H_ + MAX_H_ * 2 + 4096], *head;
+
+    while (1) {
+        int key = waitkey_();
+        if (key > 0) {
+            if (keypress) {
+                keypress(key);
+            }
+            continue;
+        } else {
+            uint64_t t = timer_ms_() - start_time_;
+            if (t - last_time <= 1000 / fps) {
+                continue;
+            }
+            last_time = t;
+        }
+
+        get_window_size_(&w_, &h_);
+        memset(canvas_, ' ', sizeof(canvas_));
+        update(w_, h_, draw_);
+
+        head = buffer;
+        clear_screen_();
+
+        if ((w_ << 16) + h_ != last_size) {
+            last_size = (w_ << 16) + h_;
+            append_(head, "\033[2J");
+        }
+
+        for (i = 0; i < h_; i++) {
+            if (i != 0) {
+                append_(head, "\r\n");
+            }
+            strncpy(head, &canvas_[i * w_], w_);
+            head += w_;
+        }
+
+        fwrite(buffer, head - buffer, 1, stdout);
+        fflush(stdout);
+    }
+}
+```
+
+下面是关于函数指针的调用
+
+```cpp
+// void render(int w, int h, void(*draw)(int, int, char)) {
+void render(int w, int h, draw_function draw) {
+    update();
+    if (gameOver) {
+        return;
+    }
+
+    // 清屏
+    for (int x = 0; x < w; x++) {
+        for (int y = 0; y < h; y++) {
+            draw(x, y, ' ');
+        }
+    }
+
+    // 绘制蛇
+    for (auto &part : snake) {
+        draw(part.first, part.second, '*');
+    }
+
+    // 绘制食物
+    draw(food.first, food.second, '#');
+}
+// 主函数
+int main() {
+    toybox_run(20, render, keypress); // 假设 toybox_run 函数接受一个更新游戏状态的函数作为参数
+}
+```
+
+
+
+### 强制类型转换
+
+1. `static_cast`：
+   - 用于在相关类型之间进行转换，比如基本数据类型之间的转换、指针类型之间的转换、类层次结构中的向上和向下转换等。
+   - 它是在编译时进行的，编译器会检查转换的安全性。
+   - 它不能用于指针和足够大的整数之间的转换，也不能用于空指针到任何对象指针的转换。
+   - 它通常用于那些编译器能够保证安全的转换。
+2. `reinterpret_cast`：
+   - 用于进行低级别的重新解释转换，比如指针和足够大的整数类型之间的转换，或者不同指针类型之间的转换。
+   - 它允许将任何指针转换为任何其他指针类型，即使它们之间没有继承关系。
+   - 它不进行运行时类型检查，因此使用时需要非常小心，因为它可能会导致未定义的行为。
+   - 它通常用于那些编译器无法保证安全的转换，比如将一个对象指针转换为一个完全不同类型对象的指针。
+
+举例来说：
+
+- 使用`static_cast`可以将`int`转换为`float`，或者将派生类的指针转换为基类的指针。
+- 使用`reinterpret_cast`可以将一个指针转换为足够大的整数类型，或者将一个函数指针转换为一个对象指针。
 
 ### 高级语法
 
 ---
+
+#### 智能指针
+
+##### unique_ptr
+
+
+
+##### shared_ptr
+
+
+
+##### weak_ptr
+
+和 shared_ptr、unique_ptr 类型指针一样，weak_ptr 智能指针也是以模板类的方式实现的。weak_ptr<T>（ T 为指针所指数据的类型）定义在`<memory>`头文件，并位于 std 命名空间中。因此，要想使用 weak_ptr 类型指针，程序中应首先包含如下 2 条语句：
+
+1. \#include <memory>
+2. using namespace std;
+
+> 第 2 句并不是必须的，可以不添加，则后续在使用 unique_ptr 指针时，必须标注`std::`。
+
+需要注意的是，C++11标准虽然将 weak_ptr 定位为智能指针的一种，但该类型指针通常不单独使用（没有实际用处），只能和 shared_ptr 类型指针搭配使用。甚至于，我们可以将 weak_ptr 类型指针视为 shared_ptr 指针的一种辅助工具，借助 weak_ptr 类型指针， 我们可以获取 shared_ptr 指针的一些状态信息，比如有多少指向相同的 shared_ptr 指针、shared_ptr 指针指向的堆内存是否已经被释放等等。
+
+需要注意的是，当 weak_ptr 类型指针的指向和某一 shared_ptr 指针相同时，weak_ptr 指针并不会使所指堆内存的引用计数加 1；同样，当 weak_ptr 指针被释放时，之前所指堆内存的引用计数也不会因此而减 1。也就是说，weak_ptr 类型指针并不会影响所指堆内存空间的引用计数。
+
+除此之外，weak_ptr<T> 模板类中没有重载 * 和 -> 运算符，这也就意味着，weak_ptr 类型指针只能访问所指的堆内存，而无法修改它。
+
+###### 1、weak_ptr指针的创建
+
+创建一个 weak_ptr 指针，有以下 3 种方式：
+\1) 可以创建一个空 weak_ptr 指针，例如：
+
+1. std::weak_ptr<int> wp1;
+
+
+\2) 凭借已有的 weak_ptr 指针，可以创建一个新的 weak_ptr 指针，例如：
+
+1. std::weak_ptr<int> wp2 (wp1);
+
+若 wp1 为空指针，则 wp2 也为空指针；反之，如果 wp1 指向某一 shared_ptr 指针拥有的堆内存，则 wp2 也指向该块存储空间（可以访问，但无所有权）。
+
+\3) weak_ptr 指针更常用于指向某一 shared_ptr 指针拥有的堆内存，因为在构建 weak_ptr 指针对象时，可以利用已有的 shared_ptr 指针为其初始化。例如：
+
+1. std::shared_ptr<int> sp (new int);
+2. std::weak_ptr<int> wp3 (sp);
+
+由此，wp3 指针和 sp 指针有相同的指针。再次强调，weak_ptr 类型指针不会导致堆内存空间的引用计数增加或减少。
+
+###### 2) weak_ptr模板类提供的成员方法
+
+和 shared_ptr<T>、unique_ptr<T> 相比，weak_ptr<T> 模板类提供的成员方法不多，表 1 罗列了常用的成员方法及各自的功能。
+
+| 成员方法    | 功 能                                                        |
+| ----------- | ------------------------------------------------------------ |
+| operator=() | 重载 = 赋值运算符，是的 weak_ptr 指针可以直接被 weak_ptr 或者 shared_ptr 类型指针赋值。 |
+| swap(x)     | 其中 x 表示一个同类型的 weak_ptr 类型指针，该函数可以互换 2 个同类型 weak_ptr 指针的内容。 |
+| reset()     | 将当前 weak_ptr 指针置为空指针。                             |
+| use_count() | 查看指向和当前 weak_ptr 指针相同的 shared_ptr 指针的数量。   |
+| expired()   | 判断当前 weak_ptr 指针为否过期（指针为空，或者指向的堆内存已经被释放）。 |
+| lock()      | 如果当前 weak_ptr 已经过期，则该函数会返回一个空的 shared_ptr 指针；反之，该函数返回一个和当前 weak_ptr 指向相同的 shared_ptr 指针。 |
+
+> 再次强调，weak_ptr<T> 模板类没有重载 * 和 -> 运算符，因此 weak_ptr 类型指针只能访问某一 shared_ptr 指针指向的堆内存空间，无法对其进行修改。
+
+```cpp
+#include <iostream>
+#include <memory>
+using namespace std;
+int main()
+{
+    std::shared_ptr<int> sp1(new int(10));
+    std::shared_ptr<int> sp2(sp1);
+    std::weak_ptr<int> wp(sp2);
+    //输出和 wp 同指向的 shared_ptr 类型指针的数量
+    cout << wp.use_count() << endl;
+    //释放 sp2
+    sp2.reset();
+    cout << wp.use_count() << endl;
+    //借助 lock() 函数，返回一个和 wp 同指向的 shared_ptr 类型指针，获取其存储的数据
+    cout << *(wp.lock()) << endl;
+    return 0;
+}
+//程序输出结果 2 1 10
+```
+
+
 
 #### 友元
 
@@ -1425,8 +1760,6 @@ int main(){
 
 实现类：log日志系统 error warning message 修改不同等级输出不同的等级信息
 
-
-
 static：分为两种类和结构体内/外
 类外的只对定义它的翻译单元可见
 类中所有实例共享这一个static变量在C++中，如果你在头文件（.h）中定义了一个`static`变量，并且这个头文件被两个或多个`.cpp`文件包含（include），那么实际上每个`.cpp`文件都会得到该`static`变量的一个独立副本。这是因为`static`变量具有文件作用域（file scope）和内部链接性（internal linkage），意味着它仅在其定义的文件内部可见和可用。
@@ -1454,15 +1787,63 @@ int main(){
     Entity::y = 8;
     e.Print();
     e1.Print();
-    std::cin,get();
+    std::cin.get();
 }
 ```
 
-局部静态变量，考虑两个因素：变量作用域和生存期
+**局部静态变量**，考虑两个因素：变量作用域和生存期
 局部静态变量自动处理了静态成员变量的定义和初始化
-静态成员变量存在内存泄漏风险
+**静态成员变量**存在内存泄漏风险
 static Singleton* instance_ = nullptr;这样会报错
-静态成员变量必须在类定义外部进行定义和初始化![image-20240710112903242](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240710112903242.png)![image-20240710113627568](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240710113627568.png)![image-20240710113738154](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240710113738154.png)
+静态成员变量必须在类定义外部进行初始化![image-20240710112903242](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240710112903242.png)![image-20240710113627568](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240710113627568.png)![image-20240710113738154](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240710113738154.png)
+
+```cpp
+#include <iostream>
+
+//单例demo_pro 局部静态变量
+class Singleton {  
+private:  
+    Singleton() {} // 私有构造函数，防止外部创建实例  
+    ~Singleton() {} // 可以根据需要定义析构函数，但注意资源管理  
+  
+    Singleton(const Singleton&) = delete; // 删除拷贝构造函数  
+    Singleton& operator=(const Singleton&) = delete; // 删除赋值运算符  
+  
+public:  
+    static Singleton& Get() {  
+        static Singleton instance; // 局部静态变量，线程安全初始化  
+        return instance;  
+    }  
+  
+    void Hello() {  
+        std::cout << "hello" << std::endl;  
+    }  
+};  
+
+
+/* 静态成员变量
+class Singleton{
+private:
+    static Singleton* instance_ ;//静态成员变量存在内存泄漏风险
+    //static Singleton* instance_ = nullptr;这样会报错 
+    //静态成员变量必须在类定义外部进行定义和初始化
+public:
+    static Singleton& Get() {return *instance_;}
+    void Hello() {std::cout << "hello" << std::endl;}
+};
+
+Singleton* Singleton::instance_ = nullptr;
+//静态成员变量（如Singleton* Singleton::instance_）需要在类定义之外进行定义和初始化，
+//这是因为静态成员变量属于类本身，而不是类的任何特定对象
+*/
+   
+int main(){
+    Singleton::Get().Hello();
+    std::cin.get();
+}
+```
+
+
 
 enum必须是整数 可以是char/unsigned char不能是float
 ![image-20240710122156185](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240710122156185.png)
@@ -1794,6 +2175,85 @@ run 	#重新运行程序
 step	#单步
 next	#不进入函数内部
 break heartbeat.cpp:40 		#break 打断点在具体某个源文件行号打断点，需要编译时添加调试信息
+x 0x555555558061 #查看对应地址数值
+x/16xb 0x555555558060 #16进制显示
+p pBuffer #查看变量的值与对应地址
+p &frameData #查看地址
+p &frameData.sync #查看地址
+p frameData #查看值
+```
+
+删除被占用端口
+
+```sh
+# 以8888端口为例
+netstat -tulpn | grep 8888
+```
+
+如下图所示，`kill -9 768839`即可
+
+![image-20240827233243934](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240827233243934.png)
+
+##### 大小端顺序
+
+数据发送和接收存储都是0xa5 0x5a在前，将其看成u16变量作为整体看待时就变成5aa5了 
+
+1. **小端序内存布局**： 在小端序系统中，多字节数据的最低有效字节（LSB）存储在最低的内存地址处，而最高有效字节（MSB）存储在最高的内存地址处。
+
+2. **变量 `temp` 的内存表示**： 假设 `temp` 是一个 `unsigned int` 类型的变量，其值为 `0x12345678`。在小端序系统中，`temp` 在内存中的存储方式如下：
+
+   ```
+   地址   数据
+   0x00   0x78
+   0x01   0x56
+   0x02   0x34
+   0x03   0x12
+   ```
+
+   这里，`0x78` 是最低字节，存储在最低的内存地址 `0x00`，而 `0x12` 是最高字节，存储在最高的内存地址 `0x03`。
+
+3. **解引用 `unsigned int*`**： 当您使用 `unsigned int*` 指针来解引用 `temp` 时，您读取的是整个 `unsigned int` 类型的值。小端序系统将内存中连续的4个字节作为一个整体来解释，得到的值是 `0x12345678`。
+
+4. **为什么不是 `0x78563412`**： 如果您得到的是 `0x78563412`，这将意味着系统按照大端序（Big-Endian）来解释内存中的数据，即最高字节 `0x12` 被解释为值的最低有效部分，而最低字节 `0x78` 被解释为最高有效部分。但在小端序系统中，这种解释方式是不正确的。
+
+![image-20240820224639719](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240820224639719.png)
+
+![image-20240820224839521](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240820224839521.png)
+
+![image-20240821002744003](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240821002744003.png)
+
+![](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240821002654576.png)
+
+![image-20240821103952627](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240821103952627.png)
+
+##### 磁盘损坏
+
+Linux Bad Message报错 最终查明原因时磁盘损坏
+修复磁盘: 
+root权限下执行以下命令：
+```shell
+fsck -t ext4 -v /dev/sdb
+```
+- -t 给定档案系统型式
+- -v 详细显示模式
+
+安全卸载磁盘
+
+```shell
+umount /dev/sdb
+```
+
+##### 生成调试core文件
+
+```sh
+ulimit -c unlimited
+sudo service apport stop
+```
+
+调试完成再次启用错误报告即可
+
+```sh
+sudo service apport start
 ```
 
 
@@ -1889,6 +2349,8 @@ fatal: 无法访问 'https://github.com/cmu-db/bustub.git/'：Could not resolve 
 
 #### gdb调试
 
+##### 基本使用
+
 ```shell
 gdb main进入调试
 run 程序运行
@@ -1914,40 +2376,102 @@ Ctrl + x，再按2：双窗口模式，显示两个窗口
 Ctrl + x，再按a：回到传统模式，即退出layout，回到执行layout之前的调试窗口。
 当layout src的时候上下箭头是滑动程序界面 此时使用Ctrl+P Ctrl+N实现上下一条命令
 
-b main #插入断点
+break heartbeat.cpp:40 		#break 打断点在具体某个源文件行号打断点，需要编译时添加调试信息
+x 0x555555558061 #查看对应地址数值
+x/16xb 0x555555558060 #16进制显示
+p pBuffer #查看变量的值与对应地址
+p &frameData #查看地址
+p &frameData.sync #查看地址
+p frameData #查看值
+c #继续运行 continue 
+
+
+注意debug和release模式不同 存在内联优化
+b MyClass::func #针对于某个具体的类的函数 打断点 对于有重载的函数 每个都会有断点
+b grow_size() #假如存在grow_size() grow_size(int) 只想给其中之一grow_size()打断点
+b #在当前行打断点
+l #查看当前运行环境上下文
+l func #查看func函数 
 delete 1#删除断点
 info break #查看断点
+c #continue 继续运行 
 b 9 #第九行插入断点
+p grew_size() #p可以调用函数 也可以获取函数返回值
+p name.oprator=("peng") #调试器修改变量
+b func if name == 0 #给函数打条件断点 只有name为空指针才停住
+watch counter #监视counter变量如果有人修改就会暂停
+awatch counter #access watch不仅修改会打断 读取也会打断
+rwatch counter #只是在读取的时候暂停
+k #杀死线程
+tui enable #开启tui 在打断点执行到那里的时候UI就会相应显示
+gdb main -ex 'b main' #再进入gdb之后直接就会有断点
+tb func #创建临时断点 只会执行一次
+save breakpoints temp.gdb# 打了两个断点 想下次使用 保存下来
+source temp。gdb #下次使用之前source一下即可
+
+先执行你给爹main程序 可以找到它对应的id 
+ps -A | grep main或 pidof main找到进程号
+sudo gdb后attach pid即可
+
+对于一个启动文件是run.py的工程，如果报错，此时不能gdb run.py但是我们可以gdb python进入终端之后r run.py
+
+有些程序执行时需要入参argc argv 直接加在gdb后面会被认为时gdb参数 gdb main 先进入到gdb终端里面
+然后再run 1 abc即可
+
+对于死循环 可以run之后ctrl + c强制关闭 bt回溯查看原因
+
 此外gdb内置python解释器
 python print(gdb.breakpoints())
 python print(gdb.breakpoints()[0].location)
 python gdb.Breakpoints('7')
+```
 
-生成并调试core文件
+##### 生成并调试core文件
+
+```sh
 core dumped核心已转储
 ls -lth core*
 ulimit -a #查看core文件大小
 ulimit -c unlimited #修改core文件限制大小
 cat /proc/sys/kernel/core_pattern #查看core生成路径
+```
+
 因为ubuntu的服务apport.service。自动生成崩溃报告
-直接用echo "/home/boy/corefile/core-%e-%p-%t"> /proc/sys/kernel/core_pattern 进行修改
+直接用以下命令进行修改
+
+```sh
+echo "/home/boy/corefile/core-%e-%p-%t"> /proc/sys/kernel/core_pattern 
+```
+
 因为我们修改的core_pattern文件是只读文件，没法这样修改。所以要换一种思路，修改不了就先停掉apport.service，这个服务对我们来说基本没用
-//1.启用错误报告
+1.启用错误报告
+
+```sh
 sudo systemctl enable apport.service
 //或
 sudo service apport start
- 
-//2.关闭错误报告
-sudo systemctl disable apport.service
+```
+
+2.关闭错误报告
+
+```sh
+sudo systemctl disable app1ort.service
 //或
 sudo service apport stop
-使用sudo service apport stop停掉错误报告即可在可执行文件同目录生成
-gdb -c core 查看错误报告 输入bt查看错误报告
+```
+
+使用`sudo service apport stop`停掉错误报告即可在可执行文件同目录生成core文件
+
+ `gdb -c core` 查看错误报告 输入bt查看错误报告
+
+##### 其他
+
+```sh
+gdb build/main
+b func #在func函数打断点
 ```
 
 
-
-#### Clion远程调试
 
 #### Makefile
 

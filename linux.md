@@ -1,16 +1,12 @@
-
-
 # linux基础
 
-## linux命令行基础
-
-#### 常用命令
+### 常用命令
 
 ```shell
 (1) ctrl c: 取消命令，并且换行
 (2) ctrl u: 清空本行命令
 (3) tab键：可以补全命令和文件名，如果补全不了快速按两下tab键，可以显示备选选项
-(4) ls: 列出当前目录下所有文件，蓝色的是文件夹，白色的是普通文件，绿色的是可执行文件
+(4) ls: 蓝色的是文件夹，白色的是普通文件，绿色的是可执行文件 ls |grep "\.ko" grep使用-i忽略大小写
 (5) pwd: 显示当前路径
 (6) cd XXX: 进入XXX目录下, cd .. 返回上层目录
 (7) cp XXX YYY: 将XXX文件复制成YYY，XXX和YYY可以是一个路径，比如../dir_c/a.txt，表示上层目录下的dir_c文件夹下的文件a.txt
@@ -28,19 +24,23 @@
 (19) df -h #查看磁盘使用
 (20) free -h #查看内存使用
 (21) du -sh #查看当前目录占用的硬盘空间
-(22) tar -zxvf xxx.tar.gz -C yyy #指定解压目录
-(23) tar -zcvf /home/jym/temp.tar.gz ./* 
+(22) tar -xvf xxx.tar.gz -C yyy #指定解压目录
+(23) tar -cvf /home/jym/temp.tar.gz ./* 
 (24) dpkg -l |grep boost
 (25) dpkg -L libboost-dev | grep '\.so'  
 #！！！ 注意\这种方法与13不同的是未启用正则表达式 .so.1会被找到但是13只会找.so结尾文件
 (26) ip addr show#显示网卡
 (27) ip route show#查看路由表
 (28) ip route del default via 192.168.43.1 dev usb0#删除路由表
-(29) nmcli device shown
+	 ip route add default via 192.168.43.1 dev usb1 proto dhcp metric 90#增加路由表
+(29) nmcli device showusb1-c
 (30) nmcli　#查看ip信息
 (31) nmcli device status　  ##所有接口的简略信息
 (32) nmcli device show ens160    ##指定的ens160网络接口的详细信息
-
+(33) nc -lk 8888 | xxd -p #监听本机号8888端口 并将监听到数据以16进制显示
+(34) nc -lk 8888 > output.txt #输出到txt文件中
+(35) fsck -t ext4 -v /dev/sdb1 #修复磁盘 报错Linux Bad Message
+(36) sudo passwd #设置root用户密码
 
 
 drwxrwxrwx #是否文件夹/自己/同组/其他人
@@ -56,7 +56,9 @@ chmod 777 xxx -R：递归修改整个文件夹的权限
 
 ![image-20240630165434728](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240630165434728.png)
 
-#### tmux 
+ ![image-20240920111152858](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240920111152858.png)
+
+### tmux 
 
 ```shell
 1，输入命令tmux使用工具
@@ -121,7 +123,7 @@ chmod 777 xxx -R：递归修改整个文件夹的权限
 在家目录下创建.tmux.conf，并粘贴下面内容保存后，进入tmux， ctrl+b，然后输入命令：source-file ~/.tmux.conf 即可(或 在bash下执行tmux source ~/.tmux.conf)
 ```
 
-#### vim
+### vim
 
 ```
 功能：
@@ -162,7 +164,7 @@ chmod 777 xxx -R：递归修改整个文件夹的权限
     (20) :1,$s/word1/word2/gc：将全文的word1替换为word2，且在替换前要求用户确认。
     (21) v：选中文本
     (22) d：删除选中的文本
-    (23) dd: 删除当前行
+    (23) dd: 删除当前行:
     (24) y：复制选中的文本
     (25) yy: 复制当前行
     (26) p: 将复制的数据在光标的下一行/下一个位置粘贴
@@ -193,9 +195,54 @@ vim中复制需要先按住shift
 每次复制少一个字符是因为没有切换到编辑模式
 ```
 
-#### shell语法
+### shell语法
 
-##### 注释
+##### EOF 
+
+在 Shell 脚本中，`EOF`（End Of File）标记用于定义多行字符串的开始和结束，或者用来界定由 `here-document` 重定向的文本块。`here-document` 是一种特殊的重定向方式，它允许你将一段文本直接插入到命令中，而不是从文件中读取。
+
+**用途**
+
+1. **简化命令输入**：当你需要向命令提供多行输入时，`EOF` 可以简化这个过程，避免使用过多的单行重定向（例如 `echo | command`）。
+2. **提高可读性**：使用 `EOF` 可以将输入文本与命令本身分开，提高脚本的可读性和可维护性。
+3. **嵌入复杂文本**：`EOF` 允许你嵌入包含特殊字符（如换行符、制表符等）的复杂文本，而不需要对这些字符进行转义。
+
+示例 1：使用 `cat` 命令
+
+```text
+cat << EOF
+这是第一行文本。
+这是第二行文本。
+这是第三行文本。
+EOF
+```
+
+这个示例将输出三行文本。
+
+**示例 2：在 `ssh` 命令中使用**
+
+```text
+ssh user@remote_host << EOF
+cd /path/to/directory
+make
+echo "操作完成"
+EOF
+```
+
+**这个示例通过 SSH 连接到远程主机，并执行多个命令。所有在 `EOF` 之间的文本都被视为远程命令的输入。**
+
+示例 3：创建文件
+
+```text
+cat << EOF > newfile.txt
+这是文件的第一行。
+这是文件的第二行。
+EOF
+```
+
+这个示例创建了一个名为 `newfile.txt` 的新文件，并写入了两行文本。
+
+##### 注释 
 
 ````sh
 #### 
@@ -1444,7 +1491,7 @@ My name is: yxc
 
 
 
-#### ssh
+### ssh
 
 ```shell
 在本地.ssh文件中添加config文件
@@ -1492,9 +1539,9 @@ scp ~/.vimrc ~/.tmux.conf myserver:
 
 ```
 
-#### git
+### git
 
-##### 常用命令
+#### 常用命令
 
 ```shell
 git init #创建本地仓库
@@ -1573,7 +1620,7 @@ git rm -r --cached pics_test/ #删除远程仓库对应文件 适用于新添加
 
 ![image-20240624184937380](C:\Users\30116\AppData\Roaming\Typora\typora-user-images\image-20240624184937380.png)
 
-##### 问题处理
+#### 问题处理
 
 ###### git clone 失败 
 
@@ -1664,7 +1711,59 @@ git pull
 
    这个命令会用远程仓库的版本替换你本地文件的内容。
 
-#### thrift
+###### git 撤销commit
+
+在Git中，如果你想撤销一次commit，有几种不同的方法可以根据你的具体需求来选择：
+
+1. **使用 `git reset`（不修改工作目录）**： 如果你想撤销commit但不改变工作目录中的文件，可以使用：
+
+   ```sh
+   git reset --soft HEAD~1
+   ```
+   
+   这将撤销最后一次commit，但是保留你的更改，以便你可以重新提交。
+   
+2. **使用 `git reset`（重置工作目录）**： 如果你想撤销commit并且让工作目录中的文件回到撤销的状态，可以使用：
+
+   ```sh
+   git reset --hard HEAD~1
+   ```
+   
+   这将撤销最后一次commit，并且丢弃那些更改。
+   
+3. **撤销已经推送的commit**： 如果你已经将commit推送到了远程仓库，你需要使用：
+
+   ```sh
+   git push origin HEAD --force
+   ```
+   
+
+或者，如果你想撤销特定的commit而不是所有后续commit，你可以使用交互式rebase：
+
+```sh
+   git rebase -i HEAD~N
+```
+
+   这里的 `N` 是你想撤销的commit之前的commit数量。
+
+4. **使用 `git revert`**： 如果你想撤销一个commit，但是想在历史记录中保留一个revert操作的痕迹，可以使用：
+
+   ```sh
+   git revert HEAD
+   ```
+   
+
+这将创建一个新的commit，撤销之前commit的更改。
+
+###### Gitee免密push
+
+```bash
+git config --global credential.helper store
+```
+
+在你下次push时只需要再输入一次用户名和密码，电脑就会保存下来，之后就无需进行输入了。
+
+### thrift
 
 ```sh
 thrift安装
@@ -1686,7 +1785,7 @@ thrift -version
 
 
 
-#### 管道/环境变量
+### 管道/环境变量
 
 ```sh
 find . -name '*.py' #查找当前目录下的py文件
@@ -1773,7 +1872,7 @@ $ echo $LD_LIBRARY_PATH
 
 
 
-#### 服务器配置
+### 服务器配置
 
 ```shell
 usermod -aG sudo jym #分配sudo权限
@@ -1794,7 +1893,7 @@ ssh-copy-id -i .ssh/id_rsa.pub jym@192.168.126.128
 
 
 
-#### docker
+### docker
 
 ##### 安装
 
@@ -1983,7 +2082,7 @@ Ubuntu新建docker latest版本容器，新建成功但是无法ssh远程20000�
 ```sh
 apt install -y openssh-server
 apt install vim
-# 编辑 SSH 配置文件
+ # 编辑 SSH 配置文件
 vim /etc/ssh/sshd_config
 
 # 确保以下行未被注释，或者添加/修改这些行
@@ -2000,6 +2099,141 @@ service ssh start
 
 
 # 嵌入式linux
+
+## 单片机
+
+### 单片机程序运行原理
+
+![image-20240928112242004](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240928112242004.png)
+
+![image-20240928112114626](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240928112114626.png)
+
+![image-20240928112135297](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240928112135297.png)
+
+![image-20240928112147313](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240928112147313.png)
+
+![image-20240928112158056](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240928112158056.png)
+
+
+
+### BSS段
+
+1. **BSS段的内容**
+
+- BSS段中的数据是未初始化的全局变量和静态变量，它们在程序启动前被清零。
+- 这些变量在运行时存储在**SRAM**（静态随机存储器）中，因为它们需要在程序执行期间被修改和访问。
+
+2. **BSS段的位置**
+
+- 在嵌入式系统中，BSS段的位置和大小是由链接器脚本（**linker script**）定义的。
+- 链接器脚本通常定义了各个内存区域的布局，比如代码段（`.text`）、数据段（`.data`）、BSS段（`.bss`）等。
+
+例如，在STM32的典型链接器脚本中，会有类似如下的定义：
+
+```
+ld复制代码.bss :
+{
+    . = ALIGN(4);
+    _sbss = .;         /* BSS段的起始地址 */
+    *(.bss)            /* 把所有.bss段的数据放入这里 */
+    *(.bss.*)
+    . = ALIGN(4);
+    _ebss = .;         /* BSS段的结束地址 */
+} >RAM
+```
+
+在这个脚本中，BSS段从 `_sbss` 开始，到 `_ebss` 结束，存放在 **RAM** 中。
+
+3. **BSS段的初始化**
+
+- BSS段在启动时被清零，这个工作通常是在**启动代码**（通常是`startup.c`或者汇编文件中的`startup.s`）中完成的。
+
+- 在启动代码中，会有一段代码用来清空BSS段，通常是类似以下的代码：
+
+  ```
+  c复制代码void ZeroBSS(void) {
+      uint32_t *bss = &_sbss;
+      while (bss < &_ebss) {
+          *bss++ = 0;
+      }
+  }
+  ```
+
+  这个函数会遍历BSS段的每一个地址，将其设置为0。
+
+4. **烧录时的情况**
+
+- BSS段的数据**不会**被烧录进Flash。因为BSS段的变量都是未初始化的，全是0值，烧录进Flash没有意义。
+- BSS段的变量值是在程序运行时，CPU启动时由启动代码自动将其清零。
+
+5. **保存位置**
+
+- **在Flash中**：BSS段的具体位置不会保存，因为它不包含实际数据，它的相关信息（如起始地址和结束地址）会保存在链接器脚本中，并在程序启动时通过启动代码来初始化。
+- **在SRAM中**：BSS段在程序运行时动态地占用SRAM的空间，由CPU执行启动代码时清零后使用。
+
+总结：
+
+- **BSS段信息**：BSS段的信息主要是起始地址和结束地址（由链接器脚本确定）。
+- **保存位置**：BSS段本身的数据不会存储在Flash中，而是程序运行时在SRAM中动态分配，并由启动代码负责清零。
+
+## 体系结构
+
+### 流水线
+
+三级流水线是指将指令执行过程划分为三个阶段，每个阶段在流水线的不同时钟周期内处理不同的指令。这三个阶段通常是：
+
+1. **取指阶段（IF, Instruction Fetch）**：从内存中取出下一条指令。
+2. **译码阶段（ID, Instruction Decode）**：对取出的指令进行解码，并读取所需的操作数。
+3. **执行阶段（EX, Execute）**：执行指令并写回结果。
+
+#### 单CPU单核流水线
+
+- **架构**：只有一个中央处理单元（CPU），并且只有一个处理核心。
+- **特点**：流水线的使用可以提高指令的执行效率，但仍然受到单个核心的限制。每个时钟周期只能处理一条指令的某个阶段，流水线的并行性受到限制。
+- **性能**：可以通过流水线提高指令的吞吐量，但仍然受限于单核的处理能力。
+
+#### 单CPU多核流水线
+
+- **架构**：只有一个CPU，但包含多个核心。
+- **特点**：每个核心可以独立执行指令，因此可以同时处理多条指令。每个核心内部也可以实现流水线。
+- **性能**：在同一时钟周期内，多个核心可以并行执行不同的指令，从而显著提高性能，尤其是多线程和多任务环境下。
+
+#### 多CPU多核流水线
+
+- **架构**：包含多个CPU，每个CPU有多个核心。
+- **特点**：每个CPU和核心都可以独立执行指令，同时每个核心内部也可以有流水线。这样可以在更大范围内实现并行处理。
+- **性能**：由于多个CPU和多个核心的结合，可以处理大量指令，极大提高计算能力，适合高性能计算、大规模并行处理等应用场景。
+
+#### 总结
+
+- 单CPU单核流水线在性能上受到限制，但通过流水线可以提高效率。
+- 单CPU多核流水线通过多核心并行处理提高性能。
+- 多CPU多核流水线则是性能的极大提升，能够应对复杂的计算需求，适合高性能应用。
+
+十几级的流水线指的是将指令执行过程分为十多个阶段，每个阶段在不同的时钟周期内处理指令的不同部分。这种深度的流水线设计可以进一步提高指令吞吐量，但也增加了复杂性。
+
+1. **更多阶段**：通常包括取指、译码、执行、访存、写回等多个阶段。每个阶段都可以同时处理不同的指令。
+2. **提高并行性**：通过细分指令执行过程，能够更高效地利用CPU资源，提高并行性。
+3. **延迟和冒险**：增加的阶段可能导致更高的延迟，尤其是控制冒险和数据冒险的问题需要更复杂的调度和预测机制来解决。
+4. **性能提升**：在理想情况下，可以显著提升CPU的吞吐量，但在实际应用中，因分支预测和数据依赖等问题，性能提升可能受限。
+
+### 时间片
+
+时间分片（Time Slicing）是一种并发设计思想，主要用于多任务操作系统中，如FreeRTOS，以实现多个任务在同一处理器上交替执行。其基本原理如下：
+
+#### 原理
+
+1. **时间片**：系统将CPU时间划分为小单位，称为时间片（或时间段）。每个任务在其分配的时间片内运行。
+2. **任务调度**：操作系统使用调度算法（如轮询、优先级调度）来分配时间片。当一个任务的时间片结束时，操作系统会中断该任务，将CPU控制权转移给下一个任务。
+3. **上下文切换**：在任务之间切换时，系统保存当前任务的状态（上下文），并加载下一个任务的状态。这一过程称为上下文切换，可能涉及保存和恢复寄存器、程序计数器等信息。
+4. **响应性**：通过时间分片，多任务系统能够在多个任务间快速切换，提高系统的响应性，尤其在处理用户交互或实时事件时非常有效。
+
+#### 并发设计思想
+
+- **并发性**：时间分片允许多个任务在同一时刻“并行”执行，通过快速切换给用户一种同时执行的感觉。这种设计提高了资源利用率和系统的响应速度。
+- **公平性**：每个任务都有机会获得CPU时间，避免了长时间运行的任务独占资源，确保系统中所有任务都能及时得到处理。
+- **简单性**：时间分片的实现相对简单，操作系统可以基于固定的时间片长度进行调度，容易管理。
+- **可扩展性**：可以根据系统负载动态调整时间片的长度，以适应不同的应用需求和用户体验。
 
 ## linux编程
 
@@ -2118,7 +2352,169 @@ int mq_setattr(mqd_t mqdes, const struct mq_attr *mqstat, struct mq_attr *omqsta
 
 - 成功时返回0，失败时返回-1并设置errno。
 
+这个文件用于 STM32L073xx 微控制器的启动设置。它负责初始化堆栈指针和中断向量表，处理数据段和 BSS 段的初始化，并最终跳转到应用程序的 `main` 函数。
+
+## 内核编译相关
+
+### 顶层目录位置
+```sh
+cd /home/jym/code/linux/ec20_driver_pro
+```
+### 环境变量
+``` Shell
+source ../../env/kernel_build
+需要export CROSS_COMPILE_AARCH64
+```
+### 编译
+编译的项目有：`config`配置文件，`Image`，`dtbs`，`modules`
+#### 生成config配置文件
+``` Makefile
+make -C ${PWD}/kernel/kernel-4.9/ ARCH=arm64 LOCALVERSION="-tegra" CROSS_COMPILE="${CROSS_COMPILE_AARCH64}"  O=${PWD}/kernel_out  tegra_defconfig
+
+#make ARCH=arm64 LOCALVERSION="-tegra" CROSS_COMPILE="${CROSS_COMPILE_AARCH64}"  tegra_defconfig
+```
+#### 生成menuconfig配置
+``` Makefile
+make -C ${PWD}/kernel/kernel-4.9/ ARCH=arm64 LOCALVERSION="-tegra" CROSS_COMPILE="${CROSS_COMPILE_AARCH64}"  O=${PWD}/kernel_out  menuconfig
+```
+#### 生成Image
+``` Makefile
+make -C ${PWD}/kernel/kernel-4.9/ ARCH=arm64 LOCALVERSION="-tegra" CROSS_COMPILE="${CROSS_COMPILE_AARCH64}"  O=${PWD}/kernel_out  Image -j12
+```
+#### 生成dtb
+主要的设备树文件：`tegra194-p2888-0001-p2822-0000.dtb`
+关注的目录为：
+`kernel_src/hardware/nvidia/platform/t19x/galen/kernel-dts`
+关注的文件：
+    `tegra234-p3767-0003-p3768-0000-a0.dts`
+
+``` Makefile
+make -C ${PWD}/kernel/kernel-4.9/ ARCH=arm64 LOCALVERSION="-tegra" CROSS_COMPILE="${CROSS_COMPILE_AARCH64}"  O=${PWD}/kernel_out  dtbs -j12
+```
+
+`/home/ada/jetson/nvdia_35_4/kernel_src/hardware/nvidia/platform/t23x/p3768/kernel-dts/tegra234-p3767-0003-p3768-0000-a0.dts`
+生成的文件在这：
+`./kernel_out/arch/arm64/boot/dts/nvidia/tegra234-p3767-0003-p3768-0000-a0.dtb`
+
+#### 编译模块
+编译
+``` Makefile
+make -C ${PWD}/kernel/kernel-4.9/ ARCH=arm64 LOCALVERSION="-tegra" CROSS_COMPILE="${CROSS_COMPILE_AARCH64}"  O=${PWD}/kernel_out  modules -j12
+```
+安装模块
+``` Makefile
+make -C ${PWD}/kernel/kernel-4.9/ ARCH=arm64 LOCALVERSION="-tegra" CROSS_COMPILE="${CROSS_COMPILE_AARCH64}"  O=${PWD}/kernel_out INSTALL_MOD_STRIP=1 modules_install INSTALL_MOD_PATH=modules
+```
+#### 清除构建
+``` Makefile
+make -C ${PWD}/kernel/kernel-5.10/ ARCH=arm64 LOCALVERSION="-tegra" CROSS_COMPILE="${CROSS_COMPILE_AARCH64}"  O=${PWD}/kernel_out clean
+```
+
+## FreeRTOS
+
+### 简介
+
+在 FreeRTOS 中，将任务变成就绪状态的操作通常是由调度器自动进行的，但开发者也可以通过某些 API 函数显式地影响任务的就绪状态。以下是一些相关的 FreeRTOS 函数：
+
+1. **`xTaskCreate`**：创建新任务时，任务会被放入就绪状态，准备运行。
+2. **`vTaskStart`**：启动一个已经创建但尚未运行的任务。
+3. **`xTaskResume`**：恢复一个被暂停的任务，将其从阻塞状态变为就绪状态。
+4. **`vTaskDelete`**：删除一个任务。虽然这不会将任务置于就绪状态，但它会从系统中移除任务。
+5. **`vTaskSuspend`**：暂停一个正在运行或就绪的任务，使其进入阻塞状态。相反的操作是 `xTaskResume`。
+6. **`vTaskDelay`**、**`vTaskDelayUntil`**、**`vTaskWaitForDelay`**：使任务进入延迟状态，直到指定的时间过去后才变为就绪状态。
+7. **队列和信号量相关的函数**：
+   - **`xQueueSend`**、**`xQueueReceive`**：当任务因为等待队列消息而阻塞时，收到消息后会重新变为就绪状态。
+   - **`xSemaphoreTake`**、**`xSemaphoreGive`**：任务等待信号量时会被阻塞，当信号量可用时，任务变为就绪状态。
+8. **`xTaskNotifyGive`**、**`xTaskNotify`**：当任务因为等待通知而阻塞时，收到通知后会重新变为就绪状态。
+9. **`vTaskPlaceOnEventList`**、**`vTaskPlaceOnEventListRestricted`**：将任务放入事件列表（例如等待某个事件或时间），当事件触发时，任务变为就绪状态。
+10. **`xTaskGenericNotify`**、**`xTaskGenericNotifyWait`**：用于任务间的通知机制，等待通知的任务在收到通知后变为就绪状态。
+
+调度器根据任务的优先级和状态来管理任务的就绪队列。当任务因为某些原因（如等待事件、延迟、同步等）被阻塞时，它们会被从就绪状态移除。当阻塞条件解除时，任务会被重新放入就绪状态，等待 CPU 时间片的分配。
+
+### 任务执行
+
+1. **优先级为 3 的任务** 会优先于 **优先级为 4 的任务** 执行，因为它们的优先级更高（数值更小）。
+2. **优先级为 4 的任务** 只有在所有更高优先级（即数值更小的优先级）的任务不在就绪状态时才会执行。
+3. 如果一个优先级为 4 的任务正在执行，并且一个优先级为 3 的任务变得就绪，那么调度器会进行 **上下文切换**，从而挂起当前执行的优先级为 4 的任务，并开始执行优先级为 3 的任务。
+4. 只有当所有优先级为 3 的任务都不处于就绪状态时，调度器才会考虑执行优先级为 4 的任务。
+
 # 问题解决
+
+
+
+## 日常问题
+
+#### 阿里云服务器
+
+##### 服务器断联
+
+方法1：修改/etc/ssh/sshd_config文件
+在云服务器上，打开/etc/ssh/sshd_config文件
+找到如下两行：
+
+#ClientAliveInterval0
+#ClientAliveCountMax3
+去掉注释，改成
+
+ClientAliveInterval 30
+ClientAliveCountMax 86400
+![image-20240626095917981](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240626095917981.png)
+
+##### socket端口访问不了
+
+```sh
+lsof -i:8888 #查看8888端口是否被使用
+netstat -tnlp #查看服务器进程使用哪些端口
+
+在agx上实验可以运行 最终发现是防火墙
+https://blog.csdn.net/HHHSSD/article/details/117410122
+
+首先将需要连接的端口加到安全组中 例如8888
+！！！注意这里查看打开端口号才是正确的 
+加完成后将该端口拉入防火墙
+1.开启防火墙
+systemctl start firewalld
+2设置打开的端口号（永久打开）
+firewall-cmd --add-port=8000/tcp --permanent
+3.更新，端口的设置
+firewall-cmd --reload
+4.查看已经打开的端口
+firewall-cmd --list-all
+
+使用 netstat -tulpn 查看 端口使用情况
+# 以8888端口为例
+netstat -tulpn | grep 8888
+```
+
+#### Ubuntu
+
+##### Ubuntu找不到网卡
+
+---
+
+找不到ens33网卡时 只剩回环网卡
+
+![image-20240523184241232](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240523184241232.png)
+
+```shell
+这里是重新安装无线网卡
+auto ens33
+iface ens33 inet dhcp
+```
+
+##### update更新问题
+
+问题：文件大小不会符合 
+
+解决：将软件与更新中之前的源取消再重新换源即可 如第二张图所示，取消勾选清华源的ros即可
+
+![image-20240919152108137](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240919152108137.png)
+
+![image-20240919152227293](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240919152227293.png)
+
+## 项目问题
+
+### 国网相机
 
 #### 相机软件移植
 
@@ -2277,6 +2673,16 @@ ldd ./ImageMonitoring ldd用于打印程序或者库文件所依赖的共享库�
 
 #### 4G模块移植
 
+使用交叉编译器可以在x86_64平台下进行编译
+
+```sh
+export CROSS_COMPILE=~/tools/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu- #设置交叉编译工具 如果在jetson nano上make应该是gcc
+```
+
+在kernel_src文件夹目录下有nvbuild.sh，下面简要介绍nvbuild.sh
+
+![image-20240816205632918](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240816205632918.png)
+
 ```sh
 $mkdir ../../kernel_out
 $TEGRA_KERNEL_OUT=../../kernel_out
@@ -2288,65 +2694,13 @@ $sudo reboot
 
 ![image-20240523160945900](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240523160945900.png)
 
-#### Ubuntu找不到网卡
-
----
-
-找不到ens33网卡时 只剩回环网卡
-
-![image-20240523184241232](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240523184241232.png)
-
-```shell
-这里是重新安装无线网卡
-auto ens33
-iface ens33 inet dhcp
-```
-
-#### 阿里云服务器
-
-##### 服务器断联
-
-方法1：修改/etc/ssh/sshd_config文件
-在云服务器上，打开/etc/ssh/sshd_config文件
-找到如下两行：
-
-#ClientAliveInterval0
-#ClientAliveCountMax3
-去掉注释，改成
-
-ClientAliveInterval 30
-ClientAliveCountMax 86400
-![image-20240626095917981](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240626095917981.png)
-
-##### socket端口访问不了
-
-```
-lsof -i:8888 #查看8888端口是否被使用
-netstat -tnlp #查看服务器进程使用哪些端口
-
-在agx上实验可以运行 最终发现是防火墙
-https://blog.csdn.net/HHHSSD/article/details/117410122
-
-首先将需要连接的端口加到安全组中 例如8888
-！！！注意这里查看打开端口号才是正确的 
-加完成后将该端口拉入防火墙
-1.开启防火墙
-systemctl start firewalld
-2设置打开的端口号（永久打开）
-firewall-cmd --add-port=8000/tcp --permanent
-3.更新，端口的设置
-firewall-cmd --reload
-4.查看已经打开的端口
-firewall-cmd --list-all
-
-使用 netstat -tulpn 查看 端口使用情况
-# 以8888端口为例
-netstat -tulpn | grep 8888
-```
 
 
+#### turbojpeg移植
 
-#### 关于turbojpeg文件移植
+**运行时链接**
+
+- 在环境变量中声明
 
 ```shell
 1.首先需要在github上下载turbojpeg的库编译生成静态链接库 在makefile中链接上
@@ -2356,7 +2710,17 @@ netstat -tulpn | grep 8888
 将冒号后面替换成需要路径 source ~/.bashrc即可
 ```
 
+- 在Makefile中声明
 
+经常遇到这个错误
+`./bin/main: error while loading shared libraries: libmyjpeglib.so: cannot open shared object file: No such file or directory`
+因为只在程序编译时链接了动态库，但是没告诉操作系统的动态链接器在程序运行时去哪里找动态库
+加上这句话即可`LDFLAGS += -Wl,-rpath,./lib/` 
+
+```sh
+LDFLAGS := -L./lib/ -lmyjpeglib -lpng -ljpeg #-L链接的时候
+LDFLAGS += -Wl,-rpath,./lib/ #运行时候
+```
 
 #### TCP程序打包
 
@@ -2387,18 +2751,6 @@ QT编译报错 parse error at "std"
 因为之前sudo make install 在/usr/lib中已经有了libTCPClient，程序会自动索引
 解决办法：删除/usr/lib中已经有的libTCPClient，编译程序重新生成 
 运行时加上ldd这句话LD_LIBRARY_PATH=./lib/ ./bin/tcp
-
-#### 运行和链接
-
-经常遇到这个错误
-`./bin/main: error while loading shared libraries: libmyjpeglib.so: cannot open shared object file: No such file or directory`
-因为只在程序编译时链接了动态库，但是没告诉操作系统的动态链接器在程序运行时去哪里找动态库
-加上这句话即可`LDFLAGS += -Wl,-rpath,./lib/` 
-
-```sh
-LDFLAGS := -L./lib/ -lmyjpeglib -lpng -ljpeg #-L链接的时候
-LDFLAGS += -Wl,-rpath,./lib/ #运行时候
-```
 
 #### 开机自启流程
 
@@ -2464,6 +2816,24 @@ journalctl -u GalaxyWork.service
 
 通过设置环境变量文件并在服务文件中引用该文件，你可以确保服务在启动时拥有正确的环境变量。这样应该能够解决开机自启时遇到的问题。
 
+##### 修改路由规则
+
+1. **添加路由规则**：
+
+   ```
+   sudo ip route add <destination> via <gateway> dev <interface>
+   ```
+   
+   - `<destination>`：目的网络或主机地址。
+   - `<gateway>`：到达目的地的网关地址。
+   - `<interface>`：使用的网络接口。
+   
+2. **删除路由规则**：
+
+   ```
+   sudo ip route del <destination> via <gateway> dev <interface>
+   ```
+
 #### 设置静态IP
 
 
@@ -2521,7 +2891,316 @@ sudo nmcli con mod MV424_5G8 ipv4.method manual
 
 5. **验证IP配置**： 使用 `ip addr` 命令来验证 `wlan0` 接口的IP地址配置：
 
-   ```
+   ```sh
    ip addr show wlan0
    ```
 
+#### 串口权限问题
+
+##### udev检测插入SD卡
+
+在嵌入式Linux系统中用于检测SD卡插入的事件处理流程，涉及的主要组件有udev、HAL（硬件抽象层）和D-Bus。以下是这些组件的详细解释：
+
+1. **udev**：
+   - **功能**：udev是一个设备管理器，它监听内核发出的设备相关事件，如设备插入或移除。
+   - **作用**：udev负责创建或移除设备节点（例如，当SD卡插入时，在`/dev`目录下创建一个代表该SD卡的设备文件），并触发事件通知给HAL。
+2. **HAL (Hardware Abstraction Layer)**：
+   - **功能**：HAL是一个硬件抽象层，它维护一个可用设备的数据库，并提供D-Bus API。
+   - **作用**：HAL接收来自udev的事件，更新其设备数据库，并可以通过D-Bus向应用程序发送事件通知。
+3. **D-Bus**：
+   - **功能**：D-Bus是一个消息总线系统，用于进程间通信（IPC）。
+   - **作用**：D-Bus连接HAL和应用程序。应用程序可以通过订阅HAL的事件，通过D-Bus接收事件通知。当SD卡插入时，HAL通过D-Bus通知应用程序，应用程序收到通知后可以执行相应的操作。
+
+事件处理流程
+
+1. **SD卡插入**：当SD卡插入设备时，内核检测到这个事件。
+2. **udev响应**：udev接收到内核的事件，创建相应的设备节点，并通知HAL。
+3. **HAL更新**：HAL更新其设备数据库，并准备发送事件通知。
+4. **D-Bus通信**：HAL通过D-Bus发送事件通知给订阅了该事件的应用程序。
+5. **应用程序响应**：应用程序接收到事件通知后，可以执行相应的操作，如挂载文件系统、读取SD卡内容等。
+
+##### udev处理流程
+
+`udev` 处理设备插入和移除的整个过程：
+
+1. **内核设备驱动程序的检测**： 当一个设备被连接到系统时，相应的设备驱动程序会检测到这个硬件。设备驱动程序负责与硬件直接交互，并将其识别为一个特定的设备。
+2. **内核事件通知（`kobject` 通知机制）**： 一旦设备被识别，内核会通过 `kobject` 通知机制发出一个 `uevent`。这是一个用来通知用户空间有关于设备状态变更的事件。
+3. **`udev` 守护进程接收事件**： `udev` 守护进程 `udevd` 监听来自内核的 `uevent` 事件。当它接收到一个事件时，它会根据事件的类型（如设备添加或移除）来执行相应的操作。
+4. **规则匹配**： `udev` 根据预先定义的规则来处理事件。这些规则存储在 `/etc/udev/rules.d/` 和 `/lib/udev/rules.d/` 目录中。规则可以指定设备节点的名称、权限、所属用户和组等属性。`udev` 会查找与设备匹配的所有规则，并按照规则来处理设备。
+5. **设备节点的创建**： 如果系统中尚未存在对应的设备节点，`udev` 会在 `/dev` 目录下创建一个新的设备节点。设备节点是设备在文件系统中的表示，它允许用户空间的程序通过标准的文件操作接口与设备进行交互。
+6. **属性设置**： `udev` 根据匹配的规则来设置设备节点的权限和其他属性。例如，它可以设置设备文件的读写权限，或者将设备文件的所有权分配给特定的用户或组。
+7. **符号链接的创建**： `udev` 还可以创建符号链接，以提供一个更稳定的设备名称。例如，它可以根据设备的序列号或其他唯一标识符来创建一个符号链接，这样即使设备文件的名称改变了，应用程序仍然可以通过符号链接来访问设备。
+8. **通知用户空间相关应用程序**： 处理完成后，`udev` 会通过 `D-Bus` 系统发送一个通知，告知用户空间中的相关应用程序设备已经准备好被访问。应用程序可以订阅这些通知，以便在设备状态发生变化时及时响应。
+9. **应用程序响应**： 应用程序接收到 `udev` 发出的通知后，可以执行相应的操作，如挂载文件系统、启动服务或更新用户界面。
+
+##### udev解决串口权限
+
+在 Linux 系统中，串口设备通常属于 `tty` 设备，它们的访问权限默认是受限的，需要 root 用户权限才能访问。这是出于安全考虑，以防止未经授权的访问可能对系统造成损害。`udev` 规则可以用来改变设备的权限，从而允许非 root 用户访问串口设备。
+
+`udev`（用户空间的设备管理器）是一个设备管理器，它在系统启动时运行，并在设备添加或移除时动态地创建或删除相应的设备节点。`udev` 通过读取 `/etc/udev/rules.d/` 目录下的规则文件来确定如何处理设备。要解决串口设备需要 `sudo` 权限的问题，你可以添加一个 `udev` 规则来改变串口设备的权限
+
+创建设备文件的机制有以下下列几种：
+
+- mknod命令：手动创建设备节点的命令
+- devfs:可以用于创建设备节点，创建设备节点的逻辑在内核空间（内核2.4版本之前使用）
+- udev:自动创建设备节点的机制，创建设备节点的逻辑在用户空间（从内核2.6版本一直使用至今）
+- mdev:是一种轻量级的udev机制，用于一些嵌入式操作系统中
+  
+
+![image-20240918152145539](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240918152145539.png)
+
+udev是用户空间的一个应用程序，在内核空间中安装驱动时，驱动会向用户空间提供信息，向上提交目录名，在这个目录下提交设备信息，当提交信息时，后台运行的hutplug会监测 /sys/class/目录/信息  是否产生新的目录、新的信息，当产生新的信息时，hotplug会通知udev，udev会在/dev/下创建节点。
+
+```c
+#include<linux/device.h>
+1.向上提交目录信息
+struct class * class_create(struct module *owner,const char *name );
+功能：申请一个设备类并初始化，向上提交目录信息
+参数：
+owner:指向当前内核模块自身的一个模块指针，填写THIS_MODULE
+name:向上提交的目录名
+返回值：成功返回申请的struct class对象空间首地址，失败返回错误码指针
+ 
+    /*
+    在内核空间最顶层会预留4K空间，当struct class函数调用失败后函数会返回一个指向这4K空间的指针
+    bool __must_check IS_ERR(__force const void *ptr)
+    功能：判断指针是否指向4K预留空间
+    参数：要判断的指针
+    返回值：如果指着指向4K预留空间返回逻辑真，否则返回逻辑假
+     long __must_check PTR_ERR(__force const void *ptr)
+     功能：通过错误码指针得到错误码
+     ex:struct class_create *cls=struct class_create(THIS_MODULE,"mycdev");
+     if(IS_ERR(cls))
+     {
+         printk("向上提交目录失败\n");
+         return -PRT_ERR(cls);     
+     }
+    */
+ 
+2.销毁目录
+void class_destroy(struct class *cls)
+功能:销毁目录信息
+参数：cls:指向class对象的指针
+返回值：无
+3.向上提交节点信息
+struct device *device_create(struct class *class, struct device *parent,
+                 dev_t devt, void *drvdata, const char *fmt, ...)
+功能：创建一个设备对象，向上提交设备节点信息
+参数：
+cls:向上提交目录时的到的类对象指针
+parent:当前申请的对象前一个节点的地址，不知道就填 NULL
+devt:设备号    主设备号<<20|次设备号
+/*
+    MKDEV(主设备号,次设备号)：根据主设备号和次设备号得到设备号
+    MAJOR(dev)：根据设备号获取主设备号
+    MINOR(dev)：根据设备号获取次设备号
+*/
+dridata:申请的device对象的私有数据，填写NULL
+fmt:向上提交的设备节点名
+...:不定长参数   
+返回值：成功返回申请到的device对象首地址，失败返回错误码指针，指向4K预留空间
+4.销毁设备节点信息
+void device_destroy(struct class *class, dev_t devt)
+功能：销毁设备节点信息
+参数：
+class:向上提交目录时得到的类对象指针
+devt:向上提交设备节点信息时提交的设备号
+返回值：无
+```
+
+udev通过与内核的协作，实现了在设备插入和移除时自动创建和管理相应的设备节点。这个过程主要包括内核设备驱动程序的检测、内核事件通知、udev[守护进程](https://so.csdn.net/so/search?q=守护进程&spm=1001.2101.3001.7020)的规则匹配、设备节点的创建和属性设置，最后通知用户空间相关应用程序。守护进程即一经启动就运行在后台的进程。
+
+```sh
+#查看串口权限
+ls -al /dev/ttyTHS0 
+#关闭nvgetty服务
+systemctl stop nvgetty.service
+systemctl disable nvgetty.service
+#创建rules
+cd /etc/udev/rules.d/
+vim 99-serial.rules
+#重载服务 udev内核的设备管理器
+udevadm control --reload
+```
+
+![image-20240918144210001](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240918144210001.png)
+
+
+
+#### 移植jetson-SD卡镜像
+
+基本思路是将orin nano刷机然后将打包好的根文件系统
+
+##### 1.注意SD卡是否损坏，先修复再进行tar打包
+
+```sh
+tar -xvf xxx.tar.gz -C yyy #指定解压目录
+tar -cvf /home/jym/temp.tar.gz ./* 
+```
+
+##### 2.需要修改启动项
+
+SD卡中启动项目录为
+
+```sh
+/media/jym/42d445b5-f872-4775-96c6-cf6b33d84a39/boot/extlinux
+```
+
+extlinux.conf文件内容为
+
+```sh
+TIMEOUT 30
+DEFAULT primary
+
+MENU TITLE L4T boot options
+
+LABEL primary
+      MENU LABEL primary kernel
+      LINUX /boot/backup/Image
+      FDT /boot/backup/dtb/kernel_tegra234-p3767-0003-p3768-0000-a0.dtb
+      INITRD /boot/backup/initrd
+      APPEND usbcore.usbfs_memory_mb=1000 ${cbootargs} root=/dev/mmcblk1p1 rw rootwait rootfstype=ext4 mminit_loglevel=4 console=ttyTCU0,115200 console=ttyAMA0,115200 firmware_class.path=/etc/firmware fbcon=map:0 net.ifnames=0 nospectre_bhb 
+
+LABEL Test
+      MENU LABEL primary kernel
+      LINUX /boot/Image
+      FDT /boot/dtb/kernel_tegra234-p3767-0003-p3768-0000-a0.dtb
+      INITRD /boot/initrd
+      APPEND usbcore.usbfs_memory_mb=1000 ${cbootargs} root=/dev/mmcblk1p1 rw rootwait rootfstype=ext4 mminit_loglevel=4 firmware_class.path=/etc/firmware fbcon=map:0 net.ifnames=0 nospectre_bhb 
+
+LABEL smy
+      MENU LABEL smy kernel
+      LINUX /boot/smy/Image
+      FDT /boot/smy/tegra234-p3767-0003-p3768-0000-a0.dtb
+      INITRD /boot/smy/initrd
+      APPEND usbcore.usbfs_memory_mb=1000 ${cbootargs} root=/dev/mmcblk1p1 rw rootwait rootfstype=ext4 mminit_loglevel=4 firmware_class.path=/etc/firmware fbcon=map:0 net.ifnames=0 nospectre_bhb 
+
+# When testing a custom kernel, it is recommended that you create a backup of
+# the original kernel and add a new entry to this file so that the device can
+# fallback to the original kernel. To do this:
+#
+# 1, Make a backup of the original kernel
+#      sudo cp /boot/Image /boot/Image.backup
+#
+# 2, Copy your custom kernel into /boot/Image
+#
+# 3, Uncomment below menu setting lines for the original kernel
+#
+# 4, Reboot
+
+# LABEL backup
+#    MENU LABEL backup kernel
+#    LINUX /boot/Image.backup
+#    FDT /boot/dtb/kernel_tegra234-p3767-0003-p3768-0000-a0.dtb
+#    INITRD /boot/initrd
+#    APPEND usbcore.usbfs_memory_mb=1000 ${cbootargs}
+
+```
+
+需要修改root=/dev/mmcblk1p1 改为固态硬盘启动的位置 `lsblk`可查看 /dev/nvme0n1p1即可
+
+不要修改错了 优先修改primary
+
+![image-20240920110730283](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240920110730283.png)
+
+##### 3.问题处理
+
+Ubuntu下Reading package lists... Error 解决方案
+
+```sh
+sudo rm /var/lib/apt/lists/* -vf
+sudo apt-get update
+```
+
+##### 4.关于固态硬盘与SD卡
+
+- sd卡容易损坏文件，可能是因为容量太大了，sd卡的存储密度太高了，容易出错，相比较而言，容量小的可能就稳一些，固态硬盘体积更大存储数据会更稳
+
+#### Ubuntu卸载安装QT
+
+##### 安装
+
+```text
+sudo apt-get install build-essential
+sudo apt-get install qtcreator
+sudo apt-get install qt5-default
+```
+
+安装帮助文档和example
+
+```text
+sudo apt-get install qt5-doc
+sudo apt-get install qt5-doc-html qtbase5-doc-html
+sudo apt-get install qtbase5-examples
+```
+
+
+
+
+
+##### 卸载
+
+```text
+sudo apt-get remove qt5-default
+```
+
+只是卸载qtcreator
+
+```text
+sudo apt-get remove qtcreator
+```
+
+卸载qtcreator和它的依赖库
+
+```text
+sudo apt-get remove --auto-remove qtcreator
+```
+
+
+
+##### 清空
+
+清空qtcreator
+
+```text
+sudo apt-get purge qtcreator  
+```
+
+清空qtcreator以及它的依赖
+
+```text
+sudo apt-get purge --auto-remove qtcreator 
+```
+
+
+
+##### 设置[环境变量](https://zhida.zhihu.com/search?q=环境变量&zhida_source=entity&is_preview=1)
+
+执行nano ~/.bashrc 添加如下内容：
+
+```text
+QTDIR=/opt/Qt/5.15.2/gcc_64
+PATH=$QTDIR/bin:$PATH
+LD_LIBRARY_PATH=$QTDIR/lib:$LD_LIBRARY_PATH
+export QTDIR PATH  LD_LIBRARY_PATH
+```
+
+**ctrl + o** write to file
+
+**ctrol + x** quite
+
+##### linux下qt找不到 GL库问题解决
+
+如果没有安装GL
+
+执行下面命令解决：
+
+```text
+ sudo apt-get install libgl1-mesa-dev libglu1-mesa-dev
+```
+
+jetson nano打开qtcreator报错
+
+```sh
+QXcbIntegration: Cannot create platform OpenGL context, neither GLX nor EGL are enabled
+```
