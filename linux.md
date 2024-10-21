@@ -41,7 +41,7 @@
 (34) nc -lk 8888 > output.txt #输出到txt文件中
 (35) fsck -t ext4 -v /dev/sdb1 #修复磁盘 报错Linux Bad Message
 (36) sudo passwd #设置root用户密码
-
+(37) sudo passwd jym #设置用户密码
 
 drwxrwxrwx #是否文件夹/自己/同组/其他人
 chmod：修改文件权限
@@ -1616,6 +1616,9 @@ git stash list：查看栈中所有元素
 git remote set-url origin https://github.com/你的用户名/cpp_base_demo.git 
 
 git rm -r --cached pics_test/ #删除远程仓库对应文件 适用于新添加.gitignore
+
+使用 git reset --soft HEAD^ #保留修改。
+使用 git reset --hard HEAD^ #丢弃修改，恢复到上一个提交。
 ```
 
 ![image-20240624184937380](C:\Users\30116\AppData\Roaming\Typora\typora-user-images\image-20240624184937380.png)
