@@ -58,6 +58,17 @@ chmod 777 xxx -R：递归修改整个文件夹的权限
 
  ![image-20240920111152858](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240920111152858.png)
 
+### screen
+
+```sh
+新建会话 screen -S session_name #session_name虽然可以省略，但是非常有用
+远程dettach某个会话 screen -d session_name #session_name也可以是对应的session id
+进入dettached的会话 screen -r session_name #session_name也可以是对应的session id
+列出当前所有的session screen -ls
+删除会话 screen -X -S session_name quit
+清理会话 screen -wipe #清理那些dead的会话
+```
+
 ### tmux 
 
 ```shell
@@ -194,6 +205,14 @@ chmod 777 xxx -R：递归修改整个文件夹的权限
 vim中复制需要先按住shift
 每次复制少一个字符是因为没有切换到编辑模式
 ```
+
+![image-20241119150136170](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241119150136170.png)
+
+```sh
+ctrl + shift + \ #选择终端
+```
+
+
 
 ### shell语法
 
@@ -1535,8 +1554,6 @@ scp -P 22 source1 source2 destination
 
 使用scp配置其他服务器的vim和tmux
 scp ~/.vimrc ~/.tmux.conf myserver:
-
-
 ```
 
 ### git
@@ -1599,6 +1616,7 @@ git branch：查看所有分支和当前所处分支
 git checkout branch_name：切换到branch_name这个分支
 git merge branch_name：将分支branch_name合并到当前分支上
 git branch -d branch_name：删除本地仓库的branch_name分支
+git push <remote_name> --delete <branch_name> 删除远程仓库分支
 git branch branch_name：创建新分支
 git push --set-upstream origin branch_name：设置本地的branch_name分支对应远程仓库的branch_name分支
 git push -d origin branch_name：删除远程仓库的branch_name分支
@@ -1765,6 +1783,15 @@ git config --global credential.helper store
 ```
 
 在你下次push时只需要再输入一次用户名和密码，电脑就会保存下来，之后就无需进行输入了。
+
+###### Git拉取错误
+
+```sh
+fatal: unable to access 'https://gitee.com/elacoda/socket-photo-send.git/': server certificate verification failed. CAfile: none CRLfile: none
+export GIT_SSL_NO_VERIFY=1
+```
+
+![image-20241210152912317](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241210152912317.png)
 
 ### thrift
 
@@ -2441,7 +2468,7 @@ make -C ${PWD}/kernel/kernel-5.10/ ARCH=arm64 LOCALVERSION="-tegra" CROSS_COMPIL
 3. 如果一个优先级为 4 的任务正在执行，并且一个优先级为 3 的任务变得就绪，那么调度器会进行 **上下文切换**，从而挂起当前执行的优先级为 4 的任务，并开始执行优先级为 3 的任务。
 4. 只有当所有优先级为 3 的任务都不处于就绪状态时，调度器才会考虑执行优先级为 4 的任务。
 
-# 问题解决
+# 问题处理
 
 
 
@@ -2469,6 +2496,9 @@ ClientAliveCountMax 86400
 lsof -i:8888 #查看8888端口是否被使用
 netstat -tnlp #查看服务器进程使用哪些端口
 
+安装配置防火墙
+apt install firewalld
+
 在agx上实验可以运行 最终发现是防火墙
 https://blog.csdn.net/HHHSSD/article/details/117410122
 
@@ -2487,6 +2517,9 @@ firewall-cmd --list-all
 使用 netstat -tulpn 查看 端口使用情况
 # 以8888端口为例
 netstat -tulpn | grep 8888
+
+然后再去阿里云官网配置安全组，将所需要端口放开即可使用
+sudo apt-get install libssl-dev
 ```
 
 #### Ubuntu
@@ -3207,3 +3240,79 @@ jetson nano打开qtcreator报错
 ```sh
 QXcbIntegration: Cannot create platform OpenGL context, neither GLX nor EGL are enabled
 ```
+
+#### 网络IP处理
+
+1.我们使用公网IP阿里云的服务器向另一台阿里云服务器基于socket建立TCP连接，socket检测出外部IP仍为公网IP
+
+![image-20241210102855414](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241210102855414.png)
+
+![image-20241210102908281](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241210102908281.png)
+
+2.我们使用4G模块向阿里云服务器传图，注意要修改路由表，ppp0设置为默认，由于运营商存在NAT转换，我们需要确定ppp0的外部IP和私有IP
+
+![image-20241210103221339](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241210103221339.png)
+
+ifconig命令结果如下：
+
+![image-20241210103240591](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241210103240591.png)
+
+![image-20241210103341502](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241210103341502.png)
+
+python脚本代码如下：
+
+```py
+import socket
+import requests
+
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception as e:
+        print("获取本地IP出错:", e)
+        return None
+
+
+def get_external_ip():
+    try:
+        response = requests.get("http://ifconfig.me")
+        external_ip = response.text
+        return external_ip
+    except Exception as e:
+        print("获取外部IP出错:", e)
+        return None
+
+
+local_ip = get_local_ip()
+external_ip = get_external_ip()
+if local_ip and external_ip:
+    print("本地IP: ", local_ip, "，外部IP: ", external_ip)
+```
+
+shell脚本如下:
+
+```shell
+local_ip=$(ip -4 addr show ppp0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+external_ip=$(curl -s ifconfig.me)
+echo "本地IP: $local_ip，外部IP: $external_ip"
+```
+
+- `(?<=inet\s)`
+  - 这是一个零宽断言中的 “后行断言”（positive lookbehind）部分。
+  - `?<=` 表示后面的内容要匹配，但匹配到的内容不会被包含在最终的匹配结果里（也就是所谓的 “零宽”，不占宽度）。
+  - `inet` 是要匹配的文本字面量，表示查找文本中出现 “inet” 这个单词的位置。
+  - `\s` 表示空白字符（比如空格、制表符等），在这里它确保在 “inet” 后面跟着一个空白字符，整体意思就是匹配那些前面是 “inet ”（注意有个空格）的文本位置，目的是定位到 IP 地址信息前面紧挨着的标志性文本，方便准确提取后面跟着的 IP 地址。
+- `\d+`
+  - `\d` 表示匹配数字字符（0 - 9），`+` 是一个量词，表示前面的元素（也就是数字字符）要出现一次或多次。所以 `\d+` 整体就是匹配一个或多个连续的数字，用于开始提取 IP 地址中的数字部分，比如 IP 地址中的第一段数字（像 192 等）。
+- `(\.\d+){3}`
+  - 这里是一个分组结构，用括号 `()` 括起来表示一个分组。
+  - `\` 是转义字符，由于 `.` 在正则表达式中有特殊含义（表示除换行符外的任意字符），所以用 `\` 转义后，`\` 就表示其字面意义，也就是匹配一个点号（`.`）。
+  - 后面的 `\d+` 还是匹配一个或多个数字，整个 `(\.\d+)` 表示匹配一个点号后面跟着一个或多个数字这样的结构，也就是 IP 地址中每一段数字之间用点号隔开的格式中的一段（比如 `.168`）。
+  - `{3}` 是量词，表示前面的分组 `(\.\d+)` 要重复出现 3 次，也就是匹配 IP 地址中除了第一段之外的后面三段（比如完整匹配 `192.168.1.1` 中的 `.168.1.1` 部分），与前面的 `\d+` 组合起来就能完整匹配一个 IPv4 格式的 IP 地址（如 `192.168.1.1` ）。
+
+这期间还遇到一个vscode远程登陆一直登陆不上的问题，显示一直在下载vscdoe服务器，原因是我修改路由表，把网络更换成了4G模块，无法访问外部网站，导致一直卡在下载环节。后面重启之后，换之前网络就可以继续下载了。

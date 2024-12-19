@@ -1135,7 +1135,7 @@ std::stack<int, std::vector<int> > third;
 栈提供push 和 pop 等等接口，所有元素必须符合先进后出规则，所以栈不提供走访功能，也不提供迭代器(iterator)。 不像是set 或者map 提供迭代器iterator来遍历所有元素。
 队列中先进先出的数据结构，同样不允许有遍历行为，不提供迭代器, SGI STL中队列一样是以deque为缺省情况下的底部结构。std::queue 不提供迭代器。由于 std::queue 是一个队列容器适配器，它被设计成只支持队列的基本操作，如入队（push）、出队（pop）、查看队首元素（front）等，而不支持对队列中的元素进行随机访问或遍历。
     
-    1. #include <vector>
+1. #include <vector>
 vector是变长数组，支持随机访问，不支持在任意位置 O(1)插入。为了保证效率，元素的增删一般应该在末尾进行。
 
 1.1 声明
@@ -1684,6 +1684,12 @@ g++ *.o -o main # -o 后面接生成文件outputfile
 
 
 
+![image-20241121103926414](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241121103926414.png)
+
+![image-20241121103955887](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241121103955887.png)
+
+
+
 ### 设计模式
 
 
@@ -1913,6 +1919,178 @@ public：可见
 
 总结来说，类中的数组大小需要“静态”定义（在某种意义上），但这并不意味着它必须是静态成员变量。实际上，它通常是通过常量表达式或模板参数在编译时确定的。
 
+**类中数组的初始化**
+
+1. 在构造函数中初始化
+
+在类的构造函数中初始化数组成员是最常见的方法之一。你可以使用循环或者初始化列表来进行初始化。
+
+```cpp
+cpp复制代码#include <iostream>
+
+class MyClass {
+private:
+    int arr[5];
+
+public:
+    // 构造函数中使用列表初始化
+    MyClass() : arr{1, 2, 3, 4, 5} {}
+
+    void printArray() {
+        for (int i = 0; i < 5; ++i) {
+            std::cout << arr[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj;
+    obj.printArray();
+    return 0;
+}
+```
+
+2. 在构造函数中通过循环初始化
+
+如果你想根据某种逻辑进行初始化，或者数组的大小较大，可以在构造函数中使用循环来初始化数组。
+
+```cpp
+cpp复制代码#include <iostream>
+
+class MyClass {
+private:
+    int arr[5];
+
+public:
+    // 构造函数中使用循环初始化
+    MyClass() {
+        for (int i = 0; i < 5; ++i) {
+            arr[i] = i * 2; // 根据某种逻辑初始化
+        }
+    }
+
+    void printArray() {
+        for (int i = 0; i < 5; ++i) {
+            std::cout << arr[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj;
+    obj.printArray();
+    return 0;
+}
+```
+
+3. 使用动态分配的数组
+
+如果你不知道数组的大小，或者需要在运行时动态分配数组，可以使用指针并在构造函数中动态分配内存。
+
+```cpp
+cpp复制代码#include <iostream>
+
+class MyClass {
+private:
+    int* arr;
+    int size;
+
+public:
+    // 动态分配数组
+    MyClass(int s) : size(s) {
+        arr = new int[size];
+        for (int i = 0; i < size; ++i) {
+            arr[i] = i; // 初始化
+        }
+    }
+
+    ~MyClass() {
+        delete[] arr; // 释放内存
+    }
+
+    void printArray() {
+        for (int i = 0; i < size; ++i) {
+            std::cout << arr[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj(5);
+    obj.printArray();
+    return 0;
+}
+```
+
+4. 使用 `std::array`
+
+在 C++11 及其之后的版本中，你可以使用 `std::array` 代替原生数组，它提供了更多的功能和安全性。
+
+```cpp
+cpp复制代码#include <iostream>
+#include <array>
+
+class MyClass {
+private:
+    std::array<int, 5> arr;
+
+public:
+    MyClass() : arr{1, 2, 3, 4, 5} {}
+
+    void printArray() {
+        for (int i = 0; i < arr.size(); ++i) {
+            std::cout << arr[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj;
+    obj.printArray();
+    return 0;
+}
+```
+
+5. 使用 `std::vector`
+
+如果数组的大小在运行时才确定，可以使用 `std::vector`，它是动态大小的，并且具有更强的功能。
+
+```cpp
+cpp复制代码#include <iostream>
+#include <vector>
+
+class MyClass {
+private:
+    std::vector<int> arr;
+
+public:
+    MyClass(int size) : arr(size) {
+        for (int i = 0; i < size; ++i) {
+            arr[i] = i; // 初始化
+        }
+    }
+
+    void printArray() {
+        for (int i = 0; i < arr.size(); ++i) {
+            std::cout << arr[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj(5);
+    obj.printArray();
+    return 0;
+}
+```
+
+这些方法适用于不同的场景，取决于你的具体需求。
+
 
 
 # 项目
@@ -1941,6 +2119,8 @@ QT报错 没有threadmanager.h文件
 3. **阻塞**： `exec()` 方法会阻塞，意味着程序的执行会停留在这里，直到有某个事件导致应用程序退出。这通常通过发出 `QCoreApplication::quit` 信号来实现，该信号可以由应用程序中的任何对象发出。
 4. **退出事件循环**： 当 `QCoreApplication::quit` 信号被发出时，`exec()` 方法会结束事件循环，返回到调用它的 `main` 函数中。
 5. **程序退出**： 一旦 `exec()` 返回，`main` 函数会继续执行后面的代码，通常是程序的退出处理，然后程序结束。
+
+
 
 ## 国网偏振项目
 
@@ -2582,3 +2762,17 @@ sudo vim /etc/ld.so.conf
 
 ![image-20240621235034068](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240621235034068.png)
 
+
+
+## muduo网络库
+
+### 报错
+
+#### 编译报错
+
+- 由于之前安装了thrift，导致编译muduo库的时候会使用系统的thrift编译报错。
+- 解决办法：在最上层CMakeLists.txt中添加一行 禁用系统thrift查找
+
+![image-20241210210521742](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241210210521742.png)
+
+### 框架
