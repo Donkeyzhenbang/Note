@@ -37,11 +37,12 @@
 (30) nmcli　#查看ip信息
 (31) nmcli device status　  ##所有接口的简略信息
 (32) nmcli device show ens160    ##指定的ens160网络接口的详细信息
-(33) nc -lk 8888 | xxd -p #监听本机号8888端口 并将监听到数据以16进制显示
+(33) nc -lk 8888 | xxd -p #监听本机号8888端口 并将监听到数据以16进制显示[[[[]]]]
 (34) nc -lk 8888 > output.txt #输出到txt文件中
 (35) fsck -t ext4 -v /dev/sdb1 #修复磁盘 报错Linux Bad Message
 (36) sudo passwd #设置root用户密码
 (37) sudo passwd jym #设置用户密码
+(38) sudo lsof -i :3306 #使用以下命令查找正在占用端口 3306 的进程：
 
 drwxrwxrwx #是否文件夹/自己/同组/其他人
 chmod：修改文件权限
@@ -1577,6 +1578,10 @@ git checkout master切换分支
 git branch temp创建新分支
 git checkout -b 新分支名称
 
+删除本地分支	git branch -d <分支名> 或 -D 强制
+删除远程分支	git push origin --delete <分支名>
+
+
 当切换到其他commit的时候 HEAD指针和master不指向同一个，无法在原分支上进行修改
 此时可以先建一个分支再push上去
 
@@ -2547,6 +2552,54 @@ iface ens33 inet dhcp
 ![image-20240919152108137](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240919152108137.png)
 
 ![image-20240919152227293](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240919152227293.png)
+
+#### MobaXterm
+
+##### FTP传输文件
+
+1. **前提准备**：使用mobaxterm向阿里云服务器传输文件
+
+   - 服务器端配置
+     - 在阿里云服务器上，需要安装并配置 FTP 服务器软件。常见的有 vsftpd（Very Secure FTP Daemon）等。在安装完成后，需要进行配置，包括设置用户账号和密码、指定文件存储目录、设置访问权限等。
+     - 例如，使用 vsftpd 时，需要编辑其配置文件（通常位于`/etc/vsftpd.conf`）。可以配置是否允许匿名访问、本地用户的权限、监听的端口等参数。如果不允许匿名访问，需要添加本地用户，这可以通过`useradd`命令添加用户，并使用`passwd`命令设置密码。
+   - MobaXterm 设置
+     - 打开 MobaXterm 软件，在会话管理部分创建一个新的 FTP 会话。需要填写阿里云服务器的 IP 地址、FTP 服务器端口（如果是默认的 FTP 端口则为 21）、用户名和密码（与在阿里云服务器上配置的 FTP 用户账号和密码一致）。
+
+2. **建立连接和身份验证过程**
+
+   - 建立控制连接
+
+     ：
+
+     - MobaXterm 作为 FTP 客户端，会根据配置的服务器 IP 地址和端口，通过 TCP 协议建立一个控制连接。这个连接用于传输 FTP 命令和响应。例如，MobaXterm 会向阿里云服务器的 FTP 端口发送一个 TCP 连接请求，服务器接受请求后，控制连接建立成功。
+
+   - 身份验证
+
+     ：
+
+     - 控制连接建立后，MobaXterm 会发送 FTP 命令进行身份验证。首先发送`USER`命令，后面跟着在服务器端配置的用户名。服务器收到命令后，会返回一个响应，要求客户端发送密码。然后 MobaXterm 会发送`PASS`命令，后面跟着对应的密码。
+     - 例如，如果用户名是`ftpuser`，密码是`ftppassword`，MobaXterm 会发送`USER ftpuser`和`PASS ftppassword`这两个命令序列进行身份验证。服务器会验证用户名和密码是否匹配，如果匹配成功，会返回一个表示验证通过的消息（如`230 Login successful`），允许客户端进行后续的文件操作；如果验证失败，会返回错误消息，如`530 Login incorrect`，并且可能会终止连接。
+
+3. **文件上传过程**
+
+   - 发送上传命令和建立数据连接（主动模式）
+
+     ：
+
+     - 在身份验证成功后，当用户在 MobaXterm 中操作上传文件（如通过拖拽文件到服务器对应的目录）时，MobaXterm 会向 FTP 服务器发送`STOR`命令，告知服务器要上传文件，并带上要上传文件的文件名。
+     - 在 FTP 的主动模式下，服务器收到`STOR`命令后，会通过其 20 端口主动向客户端（MobaXterm）建立一个数据连接。这个数据连接用于实际的文件数据传输。
+
+   - 文件数据传输
+
+     ：
+
+     - 数据连接建立后，MobaXterm 会读取本地文件的内容，并将文件数据通过数据连接发送给阿里云服务器的 FTP 服务器。服务器接收到文件数据后，会根据`STOR`命令中指定的文件名，将文件存储到服务器端预先配置好的文件存储目录中。
+     - 例如，如果要上传的文件是`localfile.txt`，MobaXterm 会将文件的字节流数据发送给服务器，服务器会将这些数据组合成文件并存储为`localfile.txt`（或根据服务器配置可能会有文件名修改等操作）到指定的目录，如`/var/ftp/uploads`（具体目录根据服务器配置而定）。
+
+4. **被动模式下的数据连接（补充说明）**
+
+   - 在 FTP 的被动模式下，数据连接的建立过程有所不同。当 MobaXterm 发送`STOR`命令后，服务器会返回一个包含用于数据连接的端口号的响应（如`227 Entering Passive Mode (h1,n1,n2,n3,p1,p2)`，其中`h1,n1,n2,n3,p1,p2`是服务器返回的信息，用于客户端确定端口号）。
+   - 然后 MobaXterm 作为客户端会根据这个端口号主动向服务器建立数据连接，之后的文件数据传输过程与主动模式相同。被动模式在一些网络环境下（如客户端位于防火墙或 NAT 之后）可能更便于数据连接的建立。
 
 ## 项目问题
 

@@ -892,7 +892,242 @@ int main() {
 
 模板是C++中非常强大的特性，它允许程序员编写灵活且可重用的代码。通过使用模板，你可以定义与类型无关的函数和数据结构，从而提高代码的可读性、可维护性和可重用性。
 
+##### 常见模板参数
 
+###### 1. **`T`（任意类型）**
+
+- **含义**：`T` 是模板中最常用的占位符，表示“任意类型”。
+
+- **用途**：
+
+  - 用于泛型编程中处理单一类型的逻辑。
+  - 可以是内置类型（如 `int`、`double`）或用户自定义类型（如类、结构体）。
+
+- **示例**：
+
+  cpp
+
+  复制
+
+  ```
+  template<typename T>
+  T add(T a, T b) {
+      return a + b;
+  }
+  ```
+
+  调用时：
+
+  cpp
+
+  复制
+
+  ```
+  int result = add(3, 5);       // T 推断为 int
+  double result = add(3.5, 2.1); // T 推断为 double
+  ```
+
+------
+
+###### 2. **`F`（可调用对象类型）**
+
+- **含义**：`F` 通常表示一个可调用对象的类型，例如函数、函数指针、lambda 表达式、函数对象（重载了 `operator()` 的类）或 `std::function`。
+
+- **用途**：
+
+  - 用于需要传递函数或函数对象的场景。
+  - 常用于实现回调、高阶函数或算法（如 `std::for_each`）。
+
+- **示例**：
+
+  cpp
+
+  复制
+
+  ```
+  template<typename F>
+  void call_twice(F func) {
+      func();
+      func();
+  }
+  ```
+
+  调用时：
+
+  cpp
+
+  复制
+
+  ```
+  call_twice([]() { std::cout << "Hello!\n"; }); // F 推断为 lambda 类型
+  ```
+
+------
+
+###### 3. **`Args...`（可变模板参数包）**
+
+- **含义**：`Args...` 是可变模板参数包，表示模板可以接受任意数量的类型参数。
+
+- **用途**：
+
+  - 用于处理不定数量或类型的参数。
+  - 常用于实现泛型容器（如 `std::tuple`、`std::variant`）或转发函数（如 `std::make_shared`）。
+
+- **示例**：
+
+  cpp
+
+  复制
+
+  ```
+  template<typename... Args>
+  void print(Args... args) {
+      (std::cout << ... << args) << "\n"; // C++17 折叠表达式
+  }
+  ```
+
+  调用时：
+
+  cpp
+
+  复制
+
+  ```
+  print(1, "Hello", 3.14); // Args... 推断为 int, const char*, double
+  ```
+
+------
+
+###### 4. **其他常见模板参数**
+
+除了 `T`、`F`、`Args...`，C++模板中还有其他常见的参数命名和用途：
+
+**(1) `U`、`V`（额外的类型参数）**
+
+- **含义**：`U` 和 `V` 通常用于表示额外的类型参数，尤其是在需要多个类型占位符时。
+
+- **用途**：
+
+  - 用于多类型参数的模板。
+
+- **示例**：
+
+  ```
+  template<typename T, typename U>
+  auto add(T a, U b) {
+      return a + b;
+  }
+  ```
+
+  调用时：
+
+  ```
+  auto result = add(3, 4.5); // T 推断为 int, U 推断为 double
+  ```
+
+**(2) `N`（非类型模板参数）**
+
+- **含义**：`N` 通常表示一个非类型模板参数，例如整数、指针或枚举值。
+
+- **用途**：
+
+  - 用于需要在编译时确定值的场景，如数组大小、模板特化等。
+
+- **示例**：
+
+  ```
+  template<int N>
+  class Array {
+      int data[N];
+  };
+  ```
+
+  调用时：
+
+  ```
+  Array<10> arr; // N 为 10
+  ```
+
+**(3) `Container`（容器类型）**
+
+- **含义**：`Container` 通常表示一个容器类型，例如 `std::vector`、`std::list`。
+
+- **用途**：
+
+  - 用于泛型编程中处理容器类型。
+
+- **示例**：
+
+  ```
+  template<typename Container>
+  void print_container(const Container& c) {
+      for (const auto& item : c) {
+          std::cout << item << " ";
+      }
+      std::cout << "\n";
+  }
+  ```
+
+  调用时：
+
+  ```
+  std::vector<int> vec = {1, 2, 3};
+  print_container(vec); // Container 推断为 std::vector<int>
+  ```
+
+**(4) `Predicate`（谓词类型）**
+
+- **含义**：`Predicate` 通常表示一个谓词函数或函数对象，用于返回布尔值的条件判断。
+
+- **用途**：
+
+  - 用于算法中需要条件判断的场景，如 `std::find_if`。
+
+- **示例**：
+
+  ```
+  template<typename Predicate>
+  void filter(Predicate pred) {
+      if (pred(42)) {
+          std::cout << "42 passed the filter!\n";
+      }
+  }
+  ```
+
+  调用时：
+
+  ```
+  filter([](int x) { return x > 0; }); // Predicate 推断为 lambda 类型
+  ```
+
+**(5) `Iterator`（迭代器类型）**
+
+- **含义**：`Iterator` 通常表示一个迭代器类型，用于遍历容器。
+
+- **用途**：
+
+  - 用于泛型算法中处理迭代器。
+
+- **示例**：
+
+  ```
+  template<typename Iterator>
+  void print_range(Iterator begin, Iterator end) {
+      for (auto it = begin; it != end; ++it) {
+          std::cout << *it << " ";
+      }
+      std::cout << "\n";
+  }
+  ```
+
+  调用时：
+
+  ```
+  std::vector<int> vec = {1, 2, 3};
+  print_range(vec.begin(), vec.end()); // Iterator 推断为 std::vector<int>::iterator
+  ```
+
+![image-20250213115602216](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20250213115602216.png)
 
 #### 多态与虚函数
 
@@ -1859,7 +2094,7 @@ int main(){
 }
 ```
 
-
+![image-20250103172321648](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20250103172321648.png)
 
 **enum必须是整数 可以是char/unsigned char不能是float**
 ![image-20240710122156185](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240710122156185.png)
@@ -2722,7 +2957,182 @@ valgrind \
 
 
 
-## Webserver
+## 网络编程
+
+### Boost::Asio
+
+#### 线程函数/run函数
+
+**线程函数是相当于新启动了一个线程去执行对应的函数，不会阻塞到主线程，但是Boost::Asio中run函数会阻塞直到所有已提交的异步操作完成或者`io_service`被停止。**
+
+1. 线程函数
+   - 基本概念
+     - 在多线程编程中，线程函数是在线程中执行的函数。它定义了线程启动后要执行的任务。线程函数可以是普通函数、类的成员函数或者是`lambda`表达式等形式。
+   - 常见实现方式
+     - 普通函数作为线程函数
+       - 例如，在 C++ 中使用`std::thread`库时，可以将一个普通函数作为线程函数。
+       - 代码示例：
+
+```cpp
+#include <iostream>
+#include <thread>
+
+void threadFunction() {
+    std::cout << "This is a thread function." << std::endl;
+}
+
+int main() {
+    std::thread t(threadFunction);
+    t.join();
+    return 0;
+}
+```
+
+
+
+- 类的成员函数作为线程函数
+  - 当使用类的成员函数作为线程函数时，需要传递类的实例指针作为参数。
+  - 代码示例：
+
+```cpp
+#include <iostream>
+#include <thread>
+
+class MyClass {
+public:
+    void memberThreadFunction() {
+        std::cout << "This is a member thread function." << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj;
+    std::thread t(&MyClass::memberThreadFunction, &obj);
+    t.join();
+    return 0;
+}
+```
+
+- `lambda`表达式作为线程函数
+  - `lambda`表达式提供了一种简洁的方式来定义在线程中执行的函数。
+  - 代码示例：
+
+```cpp
+#include <iostream>
+#include <thread>
+
+int main() {
+    std::thread t([]() {
+        std::cout << "This is a lambda thread function." << std::endl;
+    });
+    t.join();
+    return 0;
+}
+```
+
+
+
+1. `run`和`start`函数（以不同库为例）
+   - Boost.Asio 中的`io_service::run`函数
+     - 功能
+       - 在 Boost.Asio 库中，`io_service`是处理异步操作的核心类。`io_service::run`函数用于启动事件循环，处理异步操作的完成事件。当调用`io_service::run`时，它会阻塞当前线程，直到所有已提交的异步操作完成或者`io_service`被停止。
+     - **示例代码**
+
+```cpp
+#include <iostream>
+#include <boost/asio.hpp>
+
+void handle_connect(const boost::system::error_code& error) {
+    if (!error) {
+        std::cout << "Connected successfully." << std::endl;
+    } else {
+        std::cout << "Connection failed: " << error.message() << std::endl;
+    }
+}
+
+int main() {
+    boost::asio::io_service io_service;
+    boost::asio::ip::tcp::socket socket(io_service);
+    boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), 80);
+    socket.async_connect(endpoint, handle_connect);
+    io_service.run();
+    return 0;
+}
+```
+
+
+
+- 线程库中的`start`函数（以某些线程库为例）
+  - 功能
+    - 在一些线程库中，`start`函数用于启动线程。它会调用线程函数并使线程开始执行。不同的线程库可能有不同的实现方式和功能细节。
+  - 示例（假设一个简单的自定义线程库）
+    - 假设存在一个简单的线程类`MyThread`，它有一个`start`函数用于启动线程。
+
+```cpp
+class MyThread {
+public:
+    typedef void (*ThreadFunction)();
+    MyThread(ThreadFunction func) : function(func) {}
+
+    void start() {
+        // 假设这里有底层机制来启动线程并执行function
+        // 实际情况可能更复杂，可能涉及操作系统的线程创建API
+        // 这里简单模拟
+        function();
+    }
+
+private:
+    ThreadFunction function;
+};
+
+void myFunction() {
+    std::cout << "Thread started." << std::endl;
+}
+
+int main() {
+    MyThread t(myFunction);
+    t.start();
+    return 0;
+}
+```
+
+
+
+- 在实际的多线程编程和异步编程环境中，这些函数（线程函数、`run`和`start`函数）是实现并发操作和异步处理的关键组件，它们帮助开发者有效地利用系统资源，实现高效的程序逻辑。
+
+线程函数和run start函数有什么区别？
+
+1. **线程函数**
+   - 定义和性质
+     - 线程函数是在线程中执行的函数，它定义了线程启动后要执行的具体任务。线程函数可以是普通函数、类的成员函数或者是 lambda 表达式等形式。它是实际执行任务的代码块。
+     - 例如，在 C++ 中使用`std::thread`创建线程时，传递给`std::thread`构造函数的函数就是线程函数。
+   - 作用
+     - 线程函数的主要作用是在独立的线程中执行特定的操作，如数据处理、I/O 操作等。它能够让程序在多个线程中并发地执行不同的任务，提高程序的执行效率和响应速度。
+2. **`run`函数（以 Boost.Asio 为例）**
+   - 定义和性质
+     - 在 Boost.Asio 中，`io_service::run`函数用于启动事件循环。它会阻塞当前线程，不断地从`io_service`的事件队列中获取异步操作的完成事件，并调用相应的回调函数进行处理。
+     - 例如，在网络编程中，当有异步的网络连接、数据读取或写入操作时，`io_service::run`会等待这些操作完成，并处理它们的结果。
+   - 作用
+     - 其主要作用是驱动异步操作的执行。通过`io_service::run`，可以让程序在处理异步操作时有序地进行，确保当异步操作完成时，对应的回调函数能够被正确调用。
+3. **`start`函数（以线程库为例）**
+   - 定义和性质
+     - 在许多线程库中，`start`函数用于启动一个线程。它会创建一个新的线程，并在该线程中开始执行指定的线程函数。
+     - 例如，在某些自定义的线程库或者简单的多线程框架中，`start`函数会调用底层的线程创建机制（如操作系统提供的线程创建 API）来启动线程，并将线程函数作为新线程的执行入口。
+   - 作用
+     - `start`函数的主要作用是创建并启动线程，使线程函数能够在独立的线程环境中运行。它是控制线程生命周期开始的操作，通过`start`函数，可以让多个线程并发地执行不同的线程函数，实现多线程编程的并发处理。
+4. **区别总结**
+   - 功能层面
+     - 线程函数是具体执行任务的代码，而`run`函数是用于处理异步操作的事件循环机制，`start`函数是用于启动线程使线程函数得以执行的操作。
+   - 执行机制层面
+     - 线程函数在线程启动后执行具体的操作逻辑。`run`函数是在单线程环境下处理异步事件，阻塞当前线程来处理事件队列中的事件。`start`函数则是创建新线程并让线程函数在新线程中执行，通常是非阻塞的（除非有特殊设计），它是线程启动的触发操作。
+   - 应用场景层面
+     - 线程函数用于需要并发执行的任务，如并行计算、异步 I/O 操作的具体处理等。`run`函数主要应用于异步编程框架，如网络编程中的异步操作处理。`start`函数主要应用于多线程编程中，用于启动线程来执行特定的任务。
+
+### LibEvent
+
+### WebServer
+
+### HttpServer
 
 #### Cpolar
 
@@ -2762,17 +3172,263 @@ sudo vim /etc/ld.so.conf
 
 ![image-20240621235034068](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240621235034068.png)
 
+### muduo网络库
 
+#### 报错
 
-## muduo网络库
-
-### 报错
-
-#### 编译报错
+##### 编译报错
 
 - 由于之前安装了thrift，导致编译muduo库的时候会使用系统的thrift编译报错。
 - 解决办法：在最上层CMakeLists.txt中添加一行 禁用系统thrift查找
 
 ![image-20241210210521742](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241210210521742.png)
 
-### 框架
+#### 框架
+
+
+
+
+
+## GTEST
+
+### 程序架构
+
+#### 依赖包含关系
+
+![image-20250102184221383](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20250102184221383.png)
+
+这是怎么个包含关系？internel不是gtest内部依赖的头文件，为什么还要依赖#include "gtest/gtest-matchers.h"
+
+从截图来看，`gtest-death-test-internal.h` 位于 `include/gtest/internal` 目录中，但它依赖了 `gtest/gtest-matchers.h`，这是位于更高层次的 `gtest` 目录中的头文件。这种包含关系并不奇怪，原因如下：
+
+1. **模块分层设计**：
+   - `internal` 目录中的头文件通常是实现内部功能的文件，但这些文件可能仍需要使用 `gtest` 的公共接口（如 `gtest-matchers.h` 提供的断言匹配功能）。
+   - 虽然 `gtest/internal` 是内部实现的一部分，但它依然依赖更高层的公共 API。
+2. **代码重用**：
+   - Google Test 中一些功能（如匹配器）是通用的，可以被多个模块复用。
+   - 例如，`gtest-matchers.h` 提供了断言匹配的工具函数，这些工具在内部实现时也可能需要用到。
+3. **依赖方向合理性**：
+   - 从更高层次的模块依赖较低层次的模块可能引入循环依赖，但从低层次的模块依赖高层次的通用功能（如匹配器）是常见的设计。
+   - 这样可以避免低层模块重复实现相同功能。
+
+`gtest/internal/gtest-death-test-internal.h` 虽然属于 `internal` 模块，但它依赖于 Google Test 提供的公共接口 `gtest/gtest-matchers.h`，这在设计上是合理的。如果你有更多关于具体实现的疑问，可以进一步深入代码细节分析。
+
+**为什么从低层次的模块依赖高层次的通用功能（如匹配器）是常见的设计。 不应该是上层依赖底层吗？gtest中internel是实现内部功能一些文件，不属于底层文件吗？**
+
+你的疑问很合理！通常我们确实遵循 **依赖倒置原则（Dependency Inversion Principle, DIP）**，即上层模块应该依赖底层模块，底层模块不应该依赖上层模块。这种设计可以保持代码模块的独立性和易维护性。接下来，我来解析这个问题，并结合 Google Test 的设计说明为什么这种依赖关系是合理的。
+
+------
+
+1. **Internal 是“内部实现”而非严格意义上的“底层模块”**
+
+- `gtest/internal` 目录下的文件被标记为 **内部实现细节（implementation details）**，这些文件通常是为实现 Google Test 框架功能而设计的，主要是供框架内部使用，而非直接面向用户的 API。
+- 但它们并不等同于“底层模块”。
+  - **底层模块** 通常是系统的核心或基础设施，比如基础工具库、数据结构、I/O 操作等，通常被所有上层依赖。
+  - 而 **internal 文件** 更像是实现特定功能的“辅助模块”，它在逻辑上为框架的某些部分服务。
+
+------
+
+2. **`gtest-matchers.h` 是公共功能，供所有模块复用**
+
+- `gtest-matchers.h` 提供的匹配器是 Google Test 的核心功能，属于 **通用工具模块**，这使它能够被广泛复用。
+- 从设计上看，这种 **通用模块** 并不严格归属于某个特定的层级（既非内部实现也非底层模块），而是为整个框架服务的共享工具。
+
+因此，`internal` 文件依赖 `gtest-matchers.h` 并不违反依赖倒置原则，因为它利用了公共工具的能力来避免重复实现相似功能。
+
+------
+
+3. **为什么“内部模块依赖高层次的工具模块”是合理的？**
+
+我们可以从几个方面分析：
+
+a. **公共工具的定义**
+
+- 公共工具模块（如 `gtest-matchers.h`）是一种“横切关注点”，可以被整个系统的各个模块直接使用，无论这些模块是上层还是内部模块。
+- 这种设计通常会避免模块之间的代码重复，降低维护成本。
+
+b. **减少耦合**
+
+- 如果内部模块自己实现匹配器功能，就会导致代码重复和模块耦合。
+- 通过依赖公共工具模块，内部模块的代码量和复杂度可以显著降低。
+
+c. **“高层”和“底层”的相对性**
+
+- “高层”和“底层”是相对概念。
+- 在 Google Test 的设计中，`gtest-matchers.h` 的作用并不是作为“高层”逻辑，而是提供一组通用的功能接口（如匹配器），它可以为其他模块服务。
+
+------
+
+4. **Google Test 的依赖设计**
+
+在 Google Test 中，可以把模块分为以下几个层次：
+
+1. **用户层接口**：面向最终用户的功能模块，比如 `gtest.h` 提供的测试框架接口。
+2. **内部实现层（Internal Layer）**：为实现特定功能的辅助模块，比如 `gtest/internal/gtest-death-test-internal.h`。
+3. **通用工具层（Utility Layer）**：提供公共的功能模块，比如 `gtest-matchers.h`。
+
+从依赖关系看：
+
+- **用户层** 可以依赖 **内部实现层** 和 **通用工具层**。
+- **内部实现层** 依赖 **通用工具层** 是合理的，因为工具层是独立的、可复用的模块。
+
+------
+
+5. **总结**
+
+- `internal` 是 Google Test 的“内部实现细节”，但它并不是严格意义上的“底层模块”。
+- `gtest-matchers.h` 是一个通用工具模块，独立于具体功能，因此可以被 `internal` 和其他模块复用。
+- 这种设计的核心目的是 **代码复用** 和 **模块解耦**，并不违背依赖倒置原则。
+
+
+
+
+
+#### 接口层次
+
+以下是 Google Test 项目中这三层结构的详细分类和主要文件的示例。虽然 Google Test 的设计并未严格按照分层明确划分，但通过分析其代码，我们可以合理地归纳出三层及其对应的文件。
+
+------
+
+**1. 用户层接口（User Layer）**
+
+- **描述**：
+
+  - 面向最终用户，提供测试框架的核心功能和用户可调用的 API。
+  - 用户层接口的文件通常是用户直接包含的文件，例如 `#include <gtest/gtest.h>`。
+  - 用户层通过这些文件来编写测试用例和断言。
+
+- **主要文件**：
+
+  - ```
+    include/gtest/gtest.h
+    ```
+
+    - 主入口文件，包含用户编写测试用例所需的所有接口。
+
+  - ```
+    include/gtest/gtest-death-test.h
+    ```
+
+    - 提供与死亡测试相关的功能。
+
+  - ```
+    include/gtest/gtest-param-test.h
+    ```
+
+    - 支持参数化测试的功能。
+
+  - ```
+    include/gtest/gtest-typed-test.h
+    ```
+
+    - 支持类型化测试的功能。
+
+  - ```
+    include/gtest/gtest-spi.h
+    ```
+
+    - 为高级用户提供的 SPI（Service Provider Interface），用于扩展测试框架。
+
+------
+
+**2. 内部实现层（Internal Layer）**
+
+- **描述**：
+
+  - 这些文件是框架内部的辅助模块，实现测试框架的核心功能。
+  - 通常位于 `internal` 子目录下，标记为仅供框架内部使用（不直接面向用户）。
+  - 包含具体功能的实现细节，例如断言的实现、死亡测试的具体逻辑等。
+
+- **主要文件**：
+
+  - ```
+    include/gtest/internal/gtest-internal.h
+    ```
+
+    - 提供框架内部使用的工具和类的定义（如 `GTEST_API_` 宏等）。
+
+  - ```
+    include/gtest/internal/gtest-port.h
+    ```
+
+    - 提供跨平台支持的底层功能和宏定义（如线程、原子操作等）。
+
+  - ```
+    include/gtest/internal/gtest-death-test-internal.h
+    ```
+
+    - 死亡测试的内部实现。
+
+  - ```
+    include/gtest/internal/gtest-type-util.h
+    ```
+
+    - 提供用于类型相关操作的内部工具类和函数。
+
+------
+
+**3. 通用工具层（Utility Layer）**
+
+- **描述**：
+
+  - 提供通用的工具模块，这些模块可被用户层接口和内部实现层共享。
+  - 通用工具层是独立的模块，设计为框架的各个部分都可以复用。
+  - 例如断言匹配器（`gtest-matchers.h`）和断言结果（`gtest-assertion-result.h`）。
+
+- **主要文件**：
+
+  - ```
+    include/gtest/gtest-matchers.h
+    ```
+
+    - 提供断言匹配器的实现。
+
+  - ```
+    include/gtest/gtest-assertion-result.h
+    ```
+
+    - 提供断言结果的封装。
+
+  - ```
+    include/gtest/gtest-printers.h
+    ```
+
+    - 提供自定义输出格式的支持。
+
+  - ```
+    include/gtest/gtest-message.h
+    ```
+
+    - 提供与断言和消息相关的功能。
+
+  - ```
+    include/gtest/gtest-string.h
+    ```
+
+    - 提供字符串处理的工具函数（主要是内部使用，但某些功能会暴露给用户层）。
+
+  - ```
+    include/gtest/internal/gtest-param-util.h
+    ```
+
+    - 支持参数化测试的工具类。
+
+------
+
+**依赖关系总结**
+
+- **用户层接口**（如 `gtest.h`）依赖于 **内部实现层** 和 **通用工具层**。
+- **内部实现层**（如 `gtest-death-test-internal.h`）依赖于 **通用工具层** 提供的功能（如匹配器 `gtest-matchers.h`）。
+- **通用工具层** 通常是独立的模块，不直接依赖其他层。
+
+------
+
+**实际示例**
+
+1. 当用户使用 `ASSERT_THAT(value, Matcher)` 时：
+   - 用户直接包含 `gtest/gtest.h`。
+   - `gtest.h` 内部会引用 `gtest-matchers.h` 中的匹配器功能。
+   - 匹配器可能会调用 `gtest-internal.h` 中的辅助工具类来完成具体逻辑。
+2. 当框架内部执行死亡测试时：
+   - `gtest-death-test-internal.h` 依赖 `gtest-matchers.h` 来验证死亡条件是否满足。
+   - 同时依赖 `gtest-port.h` 来完成跨平台支持（如进程控制）。g
