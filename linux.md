@@ -43,6 +43,7 @@
 (36) sudo passwd #设置root用户密码
 (37) sudo passwd jym #设置用户密码
 (38) sudo lsof -i :3306 #使用以下命令查找正在占用端口 3306 的进程：
+(30) nmcli dev connect ttyUSB2 #nmcli和network manager
 
 drwxrwxrwx #是否文件夹/自己/同组/其他人
 chmod：修改文件权限
