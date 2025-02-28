@@ -1,3 +1,7 @@
+# GO语言语法
+
+- Go语言的包管理机制。在Go中，包名确实与文件路径有关，但并不是完全由文件路径决定的。每个Go文件的`package`声明决定了包名
+
 # GoMall
 
 ## 相关命令行指令
@@ -510,38 +514,40 @@ fmt.Println(v)
 
 环境改造和确认涉及到两个方面：`docker-compose`和`.env`文件
 
-## MYSQL/ETCD/GORM
+MYSQL_DATABASE创建数据库的时候可以指定数据库名称
 
-### 三者联系区别
+**GORM**：作为 ORM 工具，它本身不提供数据库存储功能，只是简化了与 MySQL 等数据库交互时的事务管理和数据操作。处理复杂的查询和数据持久化。
 
-这三者的区别和联系可以从以下几个方面理解：
+## 编码指南
 
-1. **数据模型和存储类型**：
-   - **MySQL**：关系型数据库，支持结构化数据，适用于存储复杂的业务数据（如表格数据，涉及到关系的多表查询）。
-   - **ETCD**：分布式键值存储，适用于存储配置、状态信息、服务发现等需要保证高可用性和强一致性的场景，通常存储的是简单的键值对数据。
-   - **GORM**：是一个 ORM 框架，主要用于简化和管理与数据库（如 MySQL）的交互，处理复杂的查询和数据持久化。
-2. **应用场景**：
-   - **MySQL**：适用于存储结构化的业务数据，如用户信息、订单、商品、日志等。
-   - **ETCD**：适用于分布式系统中存储小量配置数据、服务注册与发现、分布式锁等。
-   - **GORM**：作为 Go 中的 ORM 库，GORM 主要用于在应用层与数据库（如 MySQL）进行数据交互，简化查询和数据操作的代码编写。
-3. **一致性和事务性**：
-   - **MySQL**：支持 ACID 事务，保证数据的一致性和持久性，适用于需要强一致性和复杂查询的场景。
-   - **ETCD**：保证强一致性，适用于配置管理和服务协调，但不支持复杂的事务操作。
-   - **GORM**：作为 ORM 工具，它本身不提供数据库存储功能，只是简化了与 MySQL 等数据库交互时的事务管理和数据操作。
+- 代码规范：Go语言本身错误码；protobuf错误码
+- 错误码
+- 日志实现
+- 提交规范
+- 版本命名规范
 
-### 微服务架构中的应用
+uber-go：Go语言编码指南；`golint go vet goimports`
 
-在微服务架构中，**MySQL**、**ETCD** 和 **GORM** 各自承担不同的角色：
+HTTP状态码
 
-1. **MySQL（或其他数据库）**：
-   - 用于存储微服务的核心业务数据，例如用户数据、订单数据、支付记录等。每个微服务通常有自己的数据库，用于隔离不同服务的数据。
-   - 在微服务中，数据库往往需要通过 GORM 来操作，简化数据存取的复杂性。
-2. **ETCD**：
-   - 用于存储微服务的配置和服务发现信息。例如，服务 A 启动时会将自己的信息注册到 ETCD，服务 B 通过查询 ETCD 获取服务 A 的信息。ETCD 保证了所有服务实例都能够在一个一致的状态下发现其他服务。
-   - 也用于分布式锁、分布式事务等场景，保证微服务间的协调和同步。
-3. **GORM**：
-   - 用于服务内部与数据库（如 MySQL）进行交互。每个微服务可以使用 GORM 来管理数据库中的业务数据表，简化数据库操作，减少手动编写 SQL 语句的复杂度。
-   - GORM 帮助微服务开发人员更专注于业务逻辑，而不是繁琐的数据库操作。
+![image-20250228152412249](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20250228152412249.png)
+
+日志库 ：hertz-contrib/logger
+
+![image-20250228152806831](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20250228152806831.png)
+
+提交规范：约定式提交 conventional commit
+
+```scss
+feat(auth): add login functionality				//添新功能
+fix(db): resolve connection timeout issue		//修复bug
+docs(readme): update API usage examples			//修改文档
+refactor(ui): refactor button component 		//重构代码
+perf(api): optimize request handling			//性能优化
+test(auth): add unit tests for login function	//添加测试
+```
+
+## 微服务通信
 
 # 电商项目中间件
 
