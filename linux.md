@@ -43,7 +43,7 @@
 (36) sudo passwd #设置root用户密码
 (37) sudo passwd jym #设置用户密码
 (38) sudo lsof -i :3306 #使用以下命令查找正在占用端口 3306 的进程：
-(30) nmcli dev connect ttyUSB2 #nmcli和network manager
+(30) nmcli dev connect ttyUSB2 #nmcli和network manager作为前后端 连接ttyUSB2才生成ppp0网络接口
 
 drwxrwxrwx #是否文件夹/自己/同组/其他人
 chmod：修改文件权限
@@ -138,7 +138,7 @@ chmod 777 xxx -R：递归修改整个文件夹的权限
 
 ### vim
 
-```
+```sh
 功能：
     (1) 命令行模式下的文本编辑器。
     (2) 根据文件扩展名自动判别编程语言。支持代码缩进、代码高亮等功能。
@@ -167,8 +167,8 @@ chmod 777 xxx -R：递归修改整个文件夹的权限
     (10) G：光标移动到最后一行
     (11) :n 或 nG：n为数字，光标移动到第n行
     (12) gg：光标移动到第一行，相当于1G
-    (13) n<Enter>：n为数字，光标向下移动n行
-    (14) /word：向光标之下寻找第一个值为word的字符串。
+    (13) n<Enter>：n为数字，光标向下移动n行，比如4+space
+    (14) /word：向光标jj之下寻找第一个值为word的字符串。
     (15) ?word：向光标之上寻找第一个值为word的字符串。
     (16) n：重复前一个查找操作
     (17) N：反向重复前一个查找操作
@@ -206,6 +206,7 @@ chmod 777 xxx -R：递归修改整个文件夹的权限
 退到后台 fg返回
 vim中复制需要先按住shift
 每次复制少一个字符是因为没有切换到编辑模式
+vim插件ctrl+w+h切换目录 ctrl+w+l切回代码段
 ```
 
 ![image-20241119150136170](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241119150136170.png)
@@ -1649,7 +1650,7 @@ git rm -r --cached pics_test/ #删除远程仓库对应文件 适用于新添加
 
 #### 问题处理
 
-###### git clone 失败 
+##### git clone 失败 
 
 ```shell
 Windows
@@ -1665,7 +1666,7 @@ fatal: 无法访问 'https://github.com/cmu-db/bustub.git/'：Could not resolve 
 
 ![image-20240523175733014](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240523175733014.png)
 
-######  LF 将被 CRLF 替换
+#####  LF 将被 CRLF 替换
 
 ```shell
 warning: server/qtmyserver/image_trans_server/mainwindow.ui 中的
@@ -1684,18 +1685,18 @@ git config --global core.autocrlf false
 
 ![image-20240625151116194](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240625151116194.png)
 
-###### git权限问题
+##### git权限问题
 
 ![image-20240708125304226](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20240708125304226.png)
 
-###### git远程新建分支
+##### git远程新建分支
 
 ```sh
 git push --set-upstream origin libmyjpeg
 将本地分支和上游分支对应 以后可以直接使用git push
 ```
 
-git合并分支
+##### git合并分支
 
 ```sh
 git init
@@ -1738,7 +1739,7 @@ git pull
 
    这个命令会用远程仓库的版本替换你本地文件的内容。
 
-###### git 撤销commit
+##### git 撤销commit
 
 在Git中，如果你想撤销一次commit，有几种不同的方法可以根据你的具体需求来选择：
 
@@ -1782,7 +1783,7 @@ git pull
 
 这将创建一个新的commit，撤销之前commit的更改。
 
-###### Gitee免密push
+##### Gitee免密push
 
 ```bash
 git config --global credential.helper store
@@ -1790,7 +1791,7 @@ git config --global credential.helper store
 
 在你下次push时只需要再输入一次用户名和密码，电脑就会保存下来，之后就无需进行输入了。
 
-###### Git拉取错误
+##### Git拉取错误
 
 ```sh
 fatal: unable to access 'https://gitee.com/elacoda/socket-photo-send.git/': server certificate verification failed. CAfile: none CRLfile: none
@@ -1798,6 +1799,31 @@ export GIT_SSL_NO_VERIFY=1
 ```
 
 ![image-20241210152912317](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20241210152912317.png)
+
+##### conventional commit
+
+安装cz工具
+
+```sh
+npm install -g commitizen cz-conventional-changelog
+npm ls -g -depth=0
+echo '{ "path": "cz-conventional-changelog" }' > ~/.czrc
+npm install -g @commitlint/cli @commitlint/config-conventional # 校验规范的
+
+```
+
+这里我们需要先安装nvm npm以及升级nodejs
+
+```sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+nvm install 16   # 安装 Node.js 16.x（或更高版本）
+nvm use 16       # 切换到 Node.js 16.x
+node -v   # 确保版本为 14.17 或更高
+npm install -g typescript
+source ~/.bashrc #记得及时source使得环境变量生效demo
+```
+
+
 
 ### thrift
 
@@ -3370,3 +3396,40 @@ echo "本地IP: $local_ip，外部IP: $external_ip"
   - `{3}` 是量词，表示前面的分组 `(\.\d+)` 要重复出现 3 次，也就是匹配 IP 地址中除了第一段之外的后面三段（比如完整匹配 `192.168.1.1` 中的 `.168.1.1` 部分），与前面的 `\d+` 组合起来就能完整匹配一个 IPv4 格式的 IP 地址（如 `192.168.1.1` ）。
 
 这期间还遇到一个vscode远程登陆一直登陆不上的问题，显示一直在下载vscdoe服务器，原因是我修改路由表，把网络更换成了4G模块，无法访问外部网站，导致一直卡在下载环节。后面重启之后，换之前网络就可以继续下载了。
+
+#### PPP0网络接口消失
+
+**插入 4G 模块后未生成 `ppp0` 接口** 的根本原因可能是 **调制解调器（GSM）配置或连接激活失败**
+
+![image-20250221170801099](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20250221170801099.png)
+
+![image-20250221170850999](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20250221170850999.png)
+
+![image-20250221170945818](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20250221170945818.png)
+
+ **"IP configuration could not be reserved"**，表明系统无法为 4G 模块分配 IP 地址。
+
+
+
+故障排查
+
+![image-20250221171740832](https://adonkey.oss-cn-beijing.aliyuncs.com/picgo/image-20250221171740832.png)
+
+**检查防火墙和路由**
+
+```sh
+# 暂时关闭防火墙测试
+sudo ufw disable
+
+# 检查路由表是否有默认网关
+ip route show | grep default
+```
+
+**重置网络管理器配置**
+
+如果问题依旧，尝试重置 NetworkManager：
+
+```bash
+sudo systemctl reset-failed ModemManager
+sudo systemctl restart ModemManager
+```
